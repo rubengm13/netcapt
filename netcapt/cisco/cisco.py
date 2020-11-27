@@ -1,0 +1,164 @@
+from netcapt.network_device import NetworkDevice
+
+from ciscoconfparse import CiscoConfParse
+
+
+class CiscoNetworkDevice(NetworkDevice):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.vrf_names = None
+
+    def __str__(self):
+        return "<Cisco Device host: {self.host}>".format(self=self)
+
+    # Gather Comamnds
+    def gather_version(self):
+        output = self.show_version(use_textfsm=True)
+        return output
+
+    def gather_cdp(self):
+        output = self.show_cdp_neigh_detailed(use_textfsm=True)
+        output2 = self.show_cdp_neigh(use_textfsm=True)
+        if len(output) != len(output2):
+            print("ERROR:\n"
+                  "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
+        return output
+
+    def gather_lldp(self):
+        output = self.show_lldp_neigh_detailed(use_textfsm=True)
+        output2 = self.show_lldp_neigh(use_textfsm=True)
+        if len(output) != len(output2):
+            print("ERROR:\n"
+                  "\tThe detailed LLDP count does not equal the regular LLDP count, please check the TextFSM file")
+        return output
+
+    def gather_arp(self):
+        """
+        Captures arp information and utilizing the vrf data it parses the
+        output to prepare it for extraction to WB.
+        """
+        vrf_list = self.get_vrf_names()
+        arp_list = list()
+        for vrf in vrf_list:
+            command = "show ip arp"
+            if vrf != "global":
+                command += " vrf " + vrf
+            output = self.send_command(command, use_textfsm=True)
+            if isinstance(output, list):
+                for arp in output:
+                    arp["vrf"] = vrf
+                    arp_list.append(arp)
+            else:
+                arp = {'vrf': vrf, 'address': "No ARP Data Found"}
+                arp_list.append(arp)
+        return arp_list
+
+    # Gather specific Data
+    def get_vrf_names(self):
+        """
+        Gathers the VRF names from the connection. If the names were already
+        gathered then it returns the list from the NetCapture variable of
+        vrf_names.
+        """
+        vrf_names = ["global"]
+        output = self.show_vrf()
+        if isinstance(output, list):
+            for vrf in output:
+                if vrf['name'] not in vrf_names:
+                    vrf_names.append(vrf['name'])
+        elif isinstance(output, str):
+            # Capture when the command is not supported
+            if 'Invalid input detected' in output:
+                pass
+        return vrf_names
+    # TODO: add a gather all devices.
+
+    # capture specific data that is not just a show command
+    def configuration(self, cfg_location="run", use_parser=False):
+        # check if startup or running config requested
+        if cfg_location == "start":
+            cfg = self.show_startup_configuration()
+        else:
+            cfg = self.show_running_configuration()
+        # if use_parser is required then return it will parse with CicoConfParser
+        if use_parser:
+            cfg = self.show_running_configuration()
+            return CiscoConfParse(cfg.splitlines())
+        return cfg
+
+    def interface_configuration(self, cfg_location="run"):
+        """
+        Returns the Interface objects from the CiscoConfParse object
+        :param cfg_location: 'run' to obtain running-configuration or 'start' for startup-configuration
+        :return: List of Interface objects
+        """
+        cfg = self.configuration(cfg_location=cfg_location, use_parser=True)
+        return cfg.find_objects('^interface')
+
+    # Show commands
+    def show_running_configuration(self):
+        return self.send_command("show startup-config")
+
+    def show_running_configuration(self):
+        return self.send_command("show running-config")
+
+    def show_vrf(self, use_textfsm=True):
+        """
+        Captures the show vrf output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed CDP Neighbors
+
+        """
+        return self.send_command("show vrf", use_textfsm=use_textfsm)
+
+    def show_cdp_neigh_detailed(self, use_textfsm=True):
+        """
+        Captures the Detailed CDP output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed CDP Neighbors
+
+        """
+        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm)
+
+    def show_cdp_neigh(self, use_textfsm=True):
+        """
+        Captures the summary CDP output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed CDP Neighbors
+
+        """
+        return self.send_command("show cdp neighbor", use_textfsm=use_textfsm)
+
+    def show_lldp_neigh_detailed(self, use_textfsm=True):
+        """
+        Captures the Detailed LLDP output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed LLDP Neighbors
+
+        """
+        return self.send_command("show lldp neighbor detail", use_textfsm=use_textfsm)
+
+    def show_lldp_neigh(self, use_textfsm=True):
+        """
+        Captures the summary LLDP output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed LLDP Neighbors
+
+        """
+        return self.send_command("show lldp neighbor", use_textfsm=use_textfsm)
+
+    def show_version(self, use_textfsm=True):
+        return self.send_command("show version", use_textfsm=use_textfsm)
+
+    def show_vrf(self, use_textfsm=True):
+        return self.send_command("show vrf", use_textfsm=use_textfsm)
