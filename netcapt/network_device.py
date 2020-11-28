@@ -11,7 +11,6 @@ class NetworkDevice(object):
             device_type='',
             global_delay_factor=2,
             auto_connect=False,
-            verbose=False,
             **kwargs
     ):
         self.host = host
@@ -28,7 +27,6 @@ class NetworkDevice(object):
         self.connection_variables = ({**vars(self), **kwargs}).copy()
         # Added the netmiko class here, Note it will start the connection if auto_connect is set to True
         self.connection = netmiko.ConnectHandler(**self.connection_variables)
-        self.verbose = verbose
         self.model = None
         self.version = None
         self.serial_number = None

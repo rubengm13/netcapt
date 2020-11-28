@@ -27,7 +27,7 @@ def GetNetworkDevice(**kwargs):
         netmiko_args['auto_connect'] = True
         net_dev_type = guess_device_type(**netmiko_args)
         if net_dev_type:
-            kwargs['device_type'] = kwargs['device_type'] + '_ssh'
+            kwargs['device_type'] = net_dev_type + '_ssh'
         else:
             return None
         # TODO: Need to consider what to do if we get back a None, currently it shouldn't be a problem. Needs to be
@@ -50,5 +50,7 @@ def guess_device_type(**kwargs):
     :return: String representing the detected device type
     :rtype: str or None
     """
+    if kwargs['verbose']:
+        print('Auto detecting device type for:', kwargs['host'])
     guesser = netmiko.SSHDetect(**kwargs)
     return guesser.autodetect()
