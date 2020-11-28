@@ -11,6 +11,7 @@ class NetworkDevice(object):
             secret='',
             device_type='',
             global_delay_factor=2,
+            auto_connect=False,
             verbose=False,
             **kwargs
     ):
@@ -20,11 +21,14 @@ class NetworkDevice(object):
         self.secret = secret
         if not self.secret:
             self.secret = password
+        self.auto_connect = auto_connect
         self.device_type = device_type
         self.global_delay_factor = global_delay_factor
-        # Gather netmiko connection requirements to start the connection at a later time
-        self.connection_variables = vars(self).copy()
-        self.connection = None
+        # Gather netmiko connection requirements
+        # Might go away in a later version, depending if the connection has any issues with th auto_connect
+        self.connection_variables = ({**self.connection_variables, **kwargs}).copy()
+        # Added the netmiko class here, Note it will start the connection if auto_connect is set to True
+        self.connection = netmiko.ConnectHandler(**self.connection_variables)
         self.verbose = verbose
         self.model = None
         self.version = None
@@ -34,9 +38,19 @@ class NetworkDevice(object):
     # Gather Functions
     # Most are Empty Place holders for respective Device Gathers
     def gather_version(self):
+        """
+        Gather the Version output, will return after it is parsed using TextFSM
+        :return: List with Dictionary values
+        """
         pass
 
     def gather_cdp(self):
+        """
+        Gather the CDP output, will return after it is parsed using TextFSM. Checks the count of the
+        CDP detailed neighbor and compares it to the count of the CDP neighbor to ensure that we get the
+        same amount of neighbors. If count is incorrect it will return an error.
+        :return: List with Dictionary values
+        """
         pass
 
     def gather_lldp(self):
@@ -57,9 +71,7 @@ class NetworkDevice(object):
         Starts Connection, if connection was started it will create connection with Netmiko ConnectHandler
         Otherwise it will reconnect if the connection is not alive.
         """
-        if not self.connection:
-            self.connection = netmiko.ConnectHandler(**self.connection_variables)
-        elif not self.connection.is_alive():
+        if not self.connection.is_alive():
             self.connection.establish_connection()
 
     def end_connection(self):
