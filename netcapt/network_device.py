@@ -26,7 +26,7 @@ class NetworkDevice(object):
         self.global_delay_factor = global_delay_factor
         # Gather netmiko connection requirements
         # Might go away in a later version, depending if the connection has any issues with th auto_connect
-        self.connection_variables = ({**self.connection_variables, **kwargs}).copy()
+        self.connection_variables = ({**vars(self), **kwargs}).copy()
         # Added the netmiko class here, Note it will start the connection if auto_connect is set to True
         self.connection = netmiko.ConnectHandler(**self.connection_variables)
         self.verbose = verbose
