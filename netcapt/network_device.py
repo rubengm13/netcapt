@@ -1,5 +1,4 @@
 import netmiko
-import netcapt.functions
 
 
 class NetworkDevice(object):
@@ -104,7 +103,7 @@ class NetworkDevice(object):
     def pretty_print_msg(self, msg):
         """
         Need to determine if we are going to print the XLS column,
-        we will probably have to overrride it in a later function
+        we will probably have to override it in a later function
         :param msg: msg to pretty print
         :return: None
         """
