@@ -11,7 +11,8 @@ class CiscoNetworkDevice(NetworkDevice):
     def __str__(self):
         return "<Cisco Device host: {self.host}>".format(self=self)
 
-    # Gather Comamnds
+    # Gather Commands
+    # TODO: add a gather all devices.
     def gather_version(self):
         output = self.show_version(use_textfsm=True)
         return output
@@ -53,7 +54,26 @@ class CiscoNetworkDevice(NetworkDevice):
                 arp_list.append(arp)
         return arp_list
 
-    # Gather specific Data
+    def gather_mac(self):
+        return self.show_mac_address_table()
+
+    def gather_interface(self):
+        pass
+        # TODO: this to everything, double check GetInventory to make sure you transfer all the data.
+
+    def gather_route(self):
+        pass
+        # TODO: complete the gather_route
+
+    def gather_bgp(self):
+        # TODO: complete this for Cisco XR
+        return self.show_ip_bgp()
+
+    def gather_inventory(self):
+        # TODO: add the textfsm template to Cisco XR
+        return self.show_inventory()
+
+    # Gather specific Data and parse it as needed
     def get_vrf_names(self):
         """
         Gathers the VRF names from the connection. If the names were already
@@ -71,7 +91,6 @@ class CiscoNetworkDevice(NetworkDevice):
             if 'Invalid input detected' in output:
                 pass
         return vrf_names
-    # TODO: add a gather all devices.
 
     # capture specific data that is not just a show command
     def configuration(self, cfg_location="run", use_parser=False):
@@ -95,12 +114,15 @@ class CiscoNetworkDevice(NetworkDevice):
         cfg = self.configuration(cfg_location=cfg_location, use_parser=True)
         return cfg.find_objects('^interface')
 
-    # Show commands
-    def show_running_configuration(self):
-        return self.send_command("show startup-config")
+    # Show commands with use_textfsm
+    def show_inventory(self, use_textfsm=True):
+        return self.send_command("show version", use_textfsm=use_textfsm)
 
-    def show_running_configuration(self):
-        return self.send_command("show running-config")
+    def show_ip_bgp(self, use_textfsm=True):
+        return self.send_command("show ip bgp", use_textfsm=use_textfsm)
+
+    def show_mac_address_table(self, use_textfsm=True):
+        return self.send_command("show mac address-table", use_textfsm=use_textfsm)
 
     def show_vrf(self, use_textfsm=True):
         """
@@ -160,5 +182,16 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_version(self, use_textfsm=True):
         return self.send_command("show version", use_textfsm=use_textfsm)
 
-    def show_vrf(self, use_textfsm=True):
-        return self.send_command("show vrf", use_textfsm=use_textfsm)
+    # show configuration commands with ciscoconfparse option
+    def show_startup_configuration(self, cisco_cfg_parse=False):
+        output = self.send_command("show startup-config")
+        if cisco_cfg_parse:
+            return CiscoConfParse(output)
+        return output
+
+    def show_running_configuration(self, cisco_cfg_parse=False):
+        output = self.send_command("show running-config")
+        if cisco_cfg_parse:
+            return CiscoConfParse(output)
+        return output
+
