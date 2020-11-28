@@ -99,7 +99,7 @@ class CiscoNetworkDevice(NetworkDevice):
             cfg = self.show_startup_configuration()
         else:
             cfg = self.show_running_configuration()
-        # if use_parser is required then return it will parse with CicoConfParser
+        # if use_parser is required then return it will parse with CiscoConfParser
         if use_parser:
             cfg = self.show_running_configuration()
             return CiscoConfParse(cfg.splitlines())
@@ -182,7 +182,7 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_version(self, use_textfsm=True):
         return self.send_command("show version", use_textfsm=use_textfsm)
 
-    # show configuration commands with ciscoconfparse option
+    # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False):
         output = self.send_command("show startup-config")
         if cisco_cfg_parse:
@@ -194,4 +194,3 @@ class CiscoNetworkDevice(NetworkDevice):
         if cisco_cfg_parse:
             return CiscoConfParse(output)
         return output
-

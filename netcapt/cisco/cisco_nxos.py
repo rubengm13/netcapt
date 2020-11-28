@@ -27,4 +27,3 @@ class CiscoNxosDevice(CiscoNetworkDevice):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
-

@@ -10,7 +10,6 @@ supported_devices = list(DEVICE_MAPPER.keys())
 supported_devices = "\n".join(supported_devices)
 
 
-
 def GetNetworkDevice(**kwargs):
     net_dev_type = kwargs["device_type"].split("_")
     net_dev_type = "_".join(net_dev_type[:2])
@@ -18,4 +17,3 @@ def GetNetworkDevice(**kwargs):
         raise ValueError("Unsupported Device Type, the following devices are currently supported:\n"+supported_devices)
     network_device  = DEVICE_MAPPER[net_dev_type]
     return network_device(**kwargs)
-
