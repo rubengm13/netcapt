@@ -6,6 +6,7 @@ class CiscoIosDevice(CiscoNetworkDevice):
         return "<Cisco IOS Device> host: {self.host}".format(self=self)
 
     def gather_arp(self):
+        # TODO: review this with team, do we want this in Cisco Devices, or here?
         """
         Captures arp information and utilizing the vrf data it parses the
         output to prepare it for extraction to WB.
