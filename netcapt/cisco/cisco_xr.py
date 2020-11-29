@@ -7,26 +7,18 @@ class CiscoXrDevice(CiscoNetworkDevice):
         return "<Cisco XR Device> host: {self.host}".format(self=self)
 
     # Modified Gathered Commands
-    def gather_arp(self):
-        """
-        Captures arp information and utilizing the vrf data it parses the
-        output to prepare it for extraction to WB.
-        """
-        vrf_list = self.get_vrf_names()
-        arp_list = []
-        for vrf in vrf_list:
-            command = "show arp vrf " + vrf
-            txt_tmpl = Path("ntc-templates/test_tmpl/cisco_xr_show_arp.textfsm")
-            output = self.send_command(command, textfsm_template=txt_tmpl)
+    def gather_bgp(self):
+        vrf_names = self.get_vrf_names()
+        bgp_data = list()
+        for vrf in vrf_names:
+            output = self.show_bgp_vrf(vrf)
             if isinstance(output, list):
-                for arp in output:
-                    arp["vrf"] = vrf
-                    arp_list.append(arp)
+                bgp_data += output
             else:
-                arp = {'vrf': vrf, 'address': "No ARP Data Found"}
-                arp_list.append(arp)
-        return arp_list
+                bgp_data += [{'vrf': vrf, 'status': 'No BGP Data'}]
+        return bgp_data
 
+    # Modified other commands
     def get_vrf_names(self):
         """
         Gathers the VRF names from the connection. If the names were already
@@ -45,6 +37,7 @@ class CiscoXrDevice(CiscoNetworkDevice):
                 pass
         return vrf_names
 
+    # Modified Show commands
     def show_vrf(self, use_textfsm=True):
         """
         Captures the show vrf output
@@ -54,5 +47,23 @@ class CiscoXrDevice(CiscoNetworkDevice):
         :return: List of Detailed CDP Neighbors
         """
         command = 'show vrf all'
-        txt_tmpl = Path("ntc-templates/test_tmpl/cisco_xr_show_vrf_all.textfsm")
+        txt_tmpl = Path("netcapt/ntc-templates/cisco_xr_show_vrf_all.textfsm")
         return self.send_command(command, use_textfsm=use_textfsm, textfsm_template=txt_tmpl)
+
+    def show_arp_vrf(self, vrf, use_textfsm=True):
+        textfsm_tmpl = Path("netcapt/ntc-templates/test_tmpl/cisco_xr_show_arp.textfsm")
+        return self.send_command("show arp vrf " + vrf, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+
+    def show_arp(self, use_textfsm=True):
+        textfsm_tmpl = Path("netcapt/ntc-templates/test_tmpl/cisco_xr_show_arp.textfsm")
+        return self.send_command("show arp", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+
+    def show_bgp_vrf(self, vrf, use_textfsm=True):
+        textfsm_tmpl = "netcapt/ntc-templates/test_tmpl/cisco_xr_show_bgp_vrf.textfsm"
+        cmd = 'show bgp vrf {} ipv4 unicast'.format(vrf)
+        return self.send_command(cmd, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+
+    def show_inventory(self, use_textfsm=True):
+        textfsm_tmpl = "netcapt/ntc-templates/test_tmpl/cisco_ios_show_inventory.textfsm"
+        cmd = 'show inventory'
+        return self.send_command(cmd, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
