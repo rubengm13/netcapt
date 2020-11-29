@@ -21,6 +21,7 @@ class CiscoNxosDevice(CiscoNetworkDevice):
                 for arp in output:
                     assert isinstance(vrf, object)
                     arp["vrf"] = vrf
+                    # this is NXOS specific
                     arp["type"] = "ARPA"
                     arp_list.append(arp)
             else:
