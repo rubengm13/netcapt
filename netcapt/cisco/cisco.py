@@ -12,11 +12,23 @@ class CiscoNetworkDevice(NetworkDevice):
         return "<Cisco Device host: {self.host}>".format(self=self)
 
     # Gather Commands
-    # TODO: add a gather all devices.
-    def gather_version(self):
-        output = self.show_version(use_textfsm=True)
-        return output
+    # TODO: add a gather all, that will gather all the Gather commands
+    def gather_all(self):
+        pass
 
+    # Ready
+    def gather_arp(self):
+        """
+        Developed on each individual class
+        """
+        pass
+
+    # Ready
+    def gather_bgp(self):
+        # TODO: Check if NXOS and IOS needs to be VRF aware
+        return self.show_ip_bgp()
+
+    # Ready
     def gather_cdp(self):
         output = self.show_cdp_neigh_detailed(use_textfsm=True)
         output2 = self.show_cdp_neigh(use_textfsm=True)
@@ -25,6 +37,15 @@ class CiscoNetworkDevice(NetworkDevice):
                   "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
         return output
 
+    def gather_interface(self):
+        pass
+        # TODO: this to everything, double check GetInventory to make sure you transfer all the data.
+
+    # Ready
+    def gather_inventory(self):
+        return self.show_inventory()
+
+    # Ready
     def gather_lldp(self):
         output = self.show_lldp_neigh_detailed(use_textfsm=True)
         output2 = self.show_lldp_neigh(use_textfsm=True)
@@ -33,52 +54,23 @@ class CiscoNetworkDevice(NetworkDevice):
                   "\tThe detailed LLDP count does not equal the regular LLDP count, please check the TextFSM file")
         return output
 
-    def gather_arp(self):
-        """
-        Captures arp information and utilizing the vrf data it parses the
-        output to prepare it for extraction to WB.
-        """
-        vrf_list = self.get_vrf_names()
-        arp_list = list()
-        for vrf in vrf_list:
-            command = "show ip arp"
-            if vrf != "global":
-                command += " vrf " + vrf
-            output = self.send_command(command, use_textfsm=True)
-            if isinstance(output, list):
-                for arp in output:
-                    arp["vrf"] = vrf
-                    arp_list.append(arp)
-            else:
-                arp = {'vrf': vrf, 'address': "No ARP Data Found"}
-                arp_list.append(arp)
-        return arp_list
-
     def gather_mac(self):
+        # TODO: Need to continue work on this for NXOS and XR
         return self.show_mac_address_table()
-
-    def gather_interface(self):
-        pass
-        # TODO: this to everything, double check GetInventory to make sure you transfer all the data.
 
     def gather_route(self):
         pass
-        # TODO: complete the gather_route
+        # TODO: complete the gather_route for all devices
 
-    def gather_bgp(self):
-        # TODO: complete this for Cisco XR
-        return self.show_ip_bgp()
-
-    def gather_inventory(self):
-        # TODO: add the textfsm template to Cisco XR
-        return self.show_inventory()
+    # Ready
+    def gather_version(self):
+        output = self.show_version(use_textfsm=True)
+        return output
 
     # Gather specific Data and parse it as needed
     def get_vrf_names(self):
         """
-        Gathers the VRF names from the connection. If the names were already
-        gathered then it returns the list from the NetCapture variable of
-        vrf_names.
+        Gathers the VRF names from the device
         """
         vrf_names = ["global"]
         output = self.show_vrf()
@@ -86,10 +78,6 @@ class CiscoNetworkDevice(NetworkDevice):
             for vrf in output:
                 if vrf['name'] not in vrf_names:
                     vrf_names.append(vrf['name'])
-        elif isinstance(output, str):
-            # Capture when the command is not supported
-            if 'Invalid input detected' in output:
-                pass
         return vrf_names
 
     # capture specific data that is not just a show command
@@ -181,6 +169,12 @@ class CiscoNetworkDevice(NetworkDevice):
 
     def show_version(self, use_textfsm=True):
         return self.send_command("show version", use_textfsm=use_textfsm)
+
+    def show_arp_vrf(self, vrf, use_textfsm=True):
+        return self.send_command("show ip arp vrf " + vrf, use_textfsm=use_textfsm)
+
+    def show_arp(self, use_textfsm=True):
+        return self.send_command("show ip arp ", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False):
