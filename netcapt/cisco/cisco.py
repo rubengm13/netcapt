@@ -7,6 +7,7 @@ class CiscoNetworkDevice(NetworkDevice):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.vrf_names = None
+        self.hostname = ''
 
     def __str__(self):
         return "<Cisco Device host: {self.host}>".format(self=self)
@@ -182,11 +183,11 @@ class CiscoNetworkDevice(NetworkDevice):
         return self.send_command("show ip arp ", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
-    def show_startup_configuration(self, cisco_cfg_parse=False, dactory=False):
+    def show_startup_configuration(self, cisco_cfg_parse=False, factory=False):
         self.disable_paging()
         output = self.send_command("show startup-config")
         if cisco_cfg_parse:
-            return CiscoConfParse(output.splitlines())
+            return CiscoConfParse(output.splitlines(), factory=factory)
         return output
 
     def show_running_configuration(self, cisco_cfg_parse=False, factory=False):
