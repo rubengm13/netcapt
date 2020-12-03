@@ -80,6 +80,10 @@ class CiscoNetworkDevice(NetworkDevice):
                     vrf_names.append(vrf['name'])
         return vrf_names
 
+    def update_hostname(self):
+        """Gets Hostname from the Connection and saves it to the device."""
+        self.hostname = self.connection.find_prompt()[:-1]
+
     # capture specific data that is not just a show command
     def configuration(self, cfg_location="run", use_parser=False):
         # check if startup or running config requested
