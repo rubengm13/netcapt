@@ -80,6 +80,7 @@ class CiscoNetworkDevice(NetworkDevice):
                     vrf_names.append(vrf['name'])
         return vrf_names
 
+    # Update Data from CLI interaction
     def update_hostname(self):
         """Gets Hostname from the Connection and saves it to the device."""
         self.hostname = self.connection.find_prompt()[:-1]
@@ -182,13 +183,19 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False):
+        self.disable_paging()
         output = self.send_command("show startup-config")
         if cisco_cfg_parse:
             return CiscoConfParse(output)
         return output
 
     def show_running_configuration(self, cisco_cfg_parse=False):
+        self.disable_paging()
         output = self.send_command("show running-config")
         if cisco_cfg_parse:
             return CiscoConfParse(output)
         return output
+
+    # Enable/Disable Features
+    def disable_paging(self):
+        self.send_command('term len 0')
