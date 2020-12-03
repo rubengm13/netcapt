@@ -182,19 +182,24 @@ class CiscoNetworkDevice(NetworkDevice):
         return self.send_command("show ip arp ", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
-    def show_startup_configuration(self, cisco_cfg_parse=False):
+    def show_startup_configuration(self, cisco_cfg_parse=False, dactory=False):
         self.disable_paging()
         output = self.send_command("show startup-config")
         if cisco_cfg_parse:
-            return CiscoConfParse(output)
+            return CiscoConfParse(output.splitlines())
         return output
 
-    def show_running_configuration(self, cisco_cfg_parse=False):
+    def show_running_configuration(self, cisco_cfg_parse=False, factory=False):
         self.disable_paging()
         output = self.send_command("show running-config")
         if cisco_cfg_parse:
-            return CiscoConfParse(output)
+            return CiscoConfParse(output.splitlines(), factory=factory)
         return output
+
+    # show tech option that disables paging and increases the global_delay factor
+    def show_tech(self, global_delay_factor=5):
+        self.disable_paging()
+        return self.send_command('show tech-support', global_delay_factor=global_delay_factor)
 
     # Enable/Disable Features
     def disable_paging(self):
