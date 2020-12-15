@@ -1,4 +1,4 @@
-from netcapt.network_device import NetworkDevice
+from ..network_device import NetworkDevice
 
 from ciscoconfparse import CiscoConfParse
 

@@ -1,4 +1,4 @@
-from netcapt.cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice
+from .cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice
 import netmiko
 
 

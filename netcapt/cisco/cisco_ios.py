@@ -1,4 +1,4 @@
-from netcapt.cisco.cisco import CiscoNetworkDevice
+from .cisco import CiscoNetworkDevice
 
 
 class CiscoIosDevice(CiscoNetworkDevice):
