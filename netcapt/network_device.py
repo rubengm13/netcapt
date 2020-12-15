@@ -75,27 +75,23 @@ class NetworkDevice(object):
         self.connection.disconnect()
 
     def save_running_config(self):
-        self.start_connection()
         self.connection.save_config()
-        self.end_connection()
 
     def send_command(self, command, **kwargs):
-        self.start_connection()
         output = self.connection.send_command(command_string=command, **kwargs)
         return output
 
-    def send_config(self, command_set):
+    def send_config_set(self, command_set, cmd_verify=False, **kwargs):
         if isinstance(command_set, str):
             command_set = command_set.splitlines()
-        self.start_connection()
-        self.connection.send_config_set(command_set, cmd_verify=False)
+        self.connection.send_config_set(command_set, cmd_verify=cmd_verify, **kwargs)
 
     def send_config_file(self, filename):
-        self.start_connection()
         self.connection.send_config_from_file(filename)
 
     def keep_alive(self, maintain_connection):
         if not maintain_connection:
+
             self.end_connection()
 
     def pretty_print_msg(self, msg):
