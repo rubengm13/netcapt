@@ -8,5 +8,8 @@ setup(
     license='GNU GPL',
     author='Ruben Gutierrez',
     author_email='rubeng318@ucla.edu',
-    description='Capture Network Data from CLI output.'
+    description='Capture Network Data from CLI output.',
+    install_requires=[
+        'netmiko'
+    ]
 )
