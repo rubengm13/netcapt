@@ -26,3 +26,10 @@ class CiscoIosDevice(CiscoNetworkDevice):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
+
+    def gather_interface(self):
+        interface_list = self.show_interface()
+        interface_status_list = self.show_interface_status()
+        if isinstance(interface_status_list, str):
+            switchport_data_found = True
+

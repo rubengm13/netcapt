@@ -118,6 +118,12 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_mac_address_table(self, use_textfsm=True):
         return self.send_command("show mac address-table", use_textfsm=use_textfsm)
 
+    def show_interface(self, use_textfsm=True):
+        return self.send_command("show interface", use_textfsm=use_textfsm)
+
+    def show_interface_status(self, use_textfsm):
+        return self.send_command("show interface status", use_textfsm=use_textfsm)
+
     def show_vrf(self, use_textfsm=True):
         """
         Captures the show vrf output
@@ -205,3 +211,4 @@ class CiscoNetworkDevice(NetworkDevice):
     # Enable/Disable Features
     def disable_paging(self):
         self.send_command('term len 0')
+
