@@ -3,9 +3,6 @@ from unipath import Path
 
 
 class CiscoXrDevice(CiscoNetworkDevice):
-    def __str__(self):
-        return "<Cisco XR Device> host: {self.host}".format(self=self)
-
     # Modified Gathered Commands
     def gather_bgp(self):
         vrf_names = self.get_vrf_names()

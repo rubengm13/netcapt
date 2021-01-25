@@ -8,9 +8,6 @@ class TextFsmParseIssue(Exception):
 
 
 class CiscoIosDevice(CiscoNetworkDevice):
-    def __str__(self):
-        return "<Cisco IOS Device> host: {self.connection.host}".format(self=self)
-
     def gather_arp(self):
         """
         Captures arp information and utilizing the vrf data it parses the
@@ -31,7 +28,3 @@ class CiscoIosDevice(CiscoNetworkDevice):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
-
-
-
-

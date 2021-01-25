@@ -14,9 +14,6 @@ class CiscoNetworkDevice(NetworkDevice):
         self.vrf_names = None
         self.hostname = ''
 
-    def __str__(self):
-        return "<Cisco Device host: {self.host}>".format(self=self)
-
     # Gather Commands
     # TODO: add a gather all, that will gather all the Gather commands
     def gather_all(self):
@@ -82,10 +79,10 @@ class CiscoNetworkDevice(NetworkDevice):
                 # parses through
                 if isinstance(intf_status_list, list):
                     intf_status = hf.find_intf_data(intf['interface'], intf_status_list, 'port')
-                    if intf_status.isnumeric():
-                        intf['vlan'] = intf_status['vlan']
                     # Only if a value was found
                     if intf_status and intf_status['vlan'] == 'trunk':
+                        if intf_status['vlan'].isnumeric():
+                            intf['vlan'] = intf_status['vlan']
                         intf['trunk_access'] = 'Trunk'
                         intf['native'] = hf.find_intf_data(
                             intf_status['port'], trunk_detail['vlans_native'], 'vlans', ''

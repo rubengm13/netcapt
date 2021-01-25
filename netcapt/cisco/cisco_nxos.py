@@ -2,9 +2,6 @@ from .cisco import CiscoNetworkDevice
 
 
 class CiscoNxosDevice(CiscoNetworkDevice):
-    def __str__(self):
-        return "<Cisco NXOS Device> host: {self.host}".format(self=self)
-
     def gather_arp(self):
         """
         Captures arp information and utilizing the vrf data it parses the

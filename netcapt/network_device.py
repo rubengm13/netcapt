@@ -17,6 +17,9 @@ class NetworkDevice(object):
         self.serial_number = None
         self.hostname = None
 
+    def __str__(self):
+        return "<%s | host: %s>"% (self.classname, self.connection.host)
+
     # Gather Functions
     # Most are Empty Place holders for respective Device Gathers
     def gather_version(self):
@@ -90,6 +93,10 @@ class NetworkDevice(object):
         if len(line2) < 15:
             line2 += (15 - len(line2)) * " "
         print(line2, "|", msg)
+
+    @property
+    def classname(self):
+        return self.__class__.__name__
 
 
 def test_print():
