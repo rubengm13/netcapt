@@ -1,12 +1,17 @@
 from .cisco import CiscoNetworkDevice
+from unipath import Path
+from .. import functions as hf
+
+
+class TextFsmParseIssue(Exception):
+    pass
 
 
 class CiscoIosDevice(CiscoNetworkDevice):
     def __str__(self):
-        return "<Cisco IOS Device> host: {self.host}".format(self=self)
+        return "<Cisco IOS Device> host: {self.connection.host}".format(self=self)
 
     def gather_arp(self):
-        # TODO: review this with team, do we want this in Cisco Devices, or here?
         """
         Captures arp information and utilizing the vrf data it parses the
         output to prepare it for extraction to WB.
@@ -27,9 +32,6 @@ class CiscoIosDevice(CiscoNetworkDevice):
                 arp_list.append(arp)
         return arp_list
 
-    def gather_interface(self):
-        interface_list = self.show_interface()
-        interface_status_list = self.show_interface_status()
-        if isinstance(interface_status_list, str):
-            switchport_data_found = True
+
+
 

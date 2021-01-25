@@ -1,6 +1,11 @@
 from ..network_device import NetworkDevice
-
 from ciscoconfparse import CiscoConfParse
+from unipath import Path
+from .. import functions as hf
+
+
+class TextFsmParseIssue(Exception):
+    pass
 
 
 class CiscoNetworkDevice(NetworkDevice):
@@ -34,13 +39,68 @@ class CiscoNetworkDevice(NetworkDevice):
         output = self.show_cdp_neigh_detailed(use_textfsm=True)
         output2 = self.show_cdp_neigh(use_textfsm=True)
         if len(output) != len(output2):
-            print("ERROR:\n"
+            raise TextFsmParseIssue("ERROR:\n"
                   "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
         return output
 
-    def gather_interface(self):
-        pass
-        # TODO: this to everything, double check GetInventory to make sure you transfer all the data.
+    # Ready
+    def gather_interfaces(self):
+        """
+        Capture the interface Data
+        :return:
+        """
+        # Applies to all of them, will not go through interface_status section because no output
+        intf_list = self.show_interface()
+        intf_status_list = self.show_interface_status()
+        vrf_info = self.show_vrf()
+
+        # Gather additional trunk data
+        trunk_detail = self.get_trunk_dict()
+        switchport_data_found = False
+
+        if isinstance(intf_list, list):
+            for intf in intf_list:
+                # Default values
+                intf['vrf'] = 'global'
+                intf['l2_l3'] = 'Layer 2'
+                intf['trunk_access'] = 'Access'
+                intf['native'] = str()
+                intf['allowed'] = str()
+                intf['not_pruned'] = str()
+                intf['vlan'] = str()
+                # Update Layer 3 Interface Data
+                if intf['ip_address']:
+                    intf['l2_l3'] = 'Layer 3'
+                    intf['trunk_access'] = 'Routed'
+                # Checking every interface not jus Layer 3
+                if isinstance(vrf_info, list):
+                    for vrf in vrf_info:
+                        for intf_vrf in vrf['interface']:
+                            if intf_vrf.lower() in hf.intf_abbvs(intf['interface']):
+                                intf = vrf['name']
+                # only proceed if Parsed by Textfsm, if a list was provided.
+                # parses through
+                if isinstance(intf_status_list, list):
+                    intf_status = hf.find_intf_data(intf['interface'], intf_status_list, 'port')
+                    if intf_status.isnumeric():
+                        intf['vlan'] = intf_status['vlan']
+                    # Only if a value was found
+                    if intf_status and intf_status['vlan'] == 'trunk':
+                        intf['trunk_access'] = 'Trunk'
+                        intf['native'] = hf.find_intf_data(
+                            intf_status['port'], trunk_detail['vlans_native'], 'vlans', ''
+                        )
+                        intf['allowed'] = hf.find_intf_data(
+                            intf_status['port'], trunk_detail['vlans_allowed'], 'vlans', ''
+                        )
+                        intf['not_pruned'] = hf.find_intf_data(
+                            intf_status['port'], trunk_detail['vlans_not_pruned'], 'vlans', ''
+                        )
+            return intf_list
+
+        elif isinstance(intf_list, str):
+            raise TextFsmParseIssue("TextFSM failed to Parse 'show interface'. "
+                                    "Please review and update the Template and output")
 
     # Ready
     def gather_inventory(self):
@@ -121,7 +181,7 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_interface(self, use_textfsm=True):
         return self.send_command("show interface", use_textfsm=use_textfsm)
 
-    def show_interface_status(self, use_textfsm):
+    def show_interface_status(self, use_textfsm=True):
         return self.send_command("show interface status", use_textfsm=use_textfsm)
 
     def show_vrf(self, use_textfsm=True):
@@ -212,3 +272,37 @@ class CiscoNetworkDevice(NetworkDevice):
     def disable_paging(self):
         self.send_command('term len 0')
 
+    # This is an intentional break
+
+    def get_trunk_dict(self):
+        """
+        Parses the 'show int trunk' response, only works on cisco_ios
+        """
+        def __parse_dictionary_data(list_of_dict):
+            if isinstance(list_of_dict, str):
+                return None
+
+            return_dict = list()
+            for line in list_of_dict:
+                t_dict = dict()
+                for key, value in line.items():
+                    t_dict[key] = str().join(value)
+                return_dict.append(t_dict)
+            return return_dict
+
+        def __get_vlan_list(txt_tmpl):
+            vlans_list = self.send_command("show int trunk", use_textfsm=True, textfsm_template=txt_tmpl)
+            vlans_list = __parse_dictionary_data(vlans_list)
+            return vlans_list
+
+        return_dict = {
+            'vlans_native': Path('netcapt/ntc-templates/cisco_ios_get_intf_native_vlan.textfsm'),
+            'vlans_allowed': Path('netcapt/ntc-templates/cisco_ios_get_intf_allowed_vlan.textfsm'),
+            'vlans_forwarding': Path('netcapt/ntc-templates/cisco_ios_get_intf_trunk_vlan.textfsm'),
+            'vlans_not_pruned': Path('netcapt/ntc-templates/cisco_ios_get_intf_not_pruned_vlan.textfsm'),
+        }
+
+        for vlan_list, template_path in return_dict.items():
+            return_dict[vlan_list] = __get_vlan_list(template_path)
+
+        return return_dict
