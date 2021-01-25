@@ -1,32 +1,17 @@
 import netmiko
 
-
+# TODO: Do we need to derive this class from the Netmiko Class?
+#  This will have to be derived on a per device type basis. Might get Tricky with SSH
 class NetworkDevice(object):
+    #TODO: Need to remove the below arguments
     def __init__(
             self,
-            host='',
-            username='',
-            password='',
-            secret='',
-            device_type='',
-            global_delay_factor=2,
             auto_connect=False,
             **kwargs
     ):
-        self.host = host
-        self.username = username
-        self.password = password
-        self.secret = secret
-        if not self.secret:
-            self.secret = password
-        self.auto_connect = auto_connect
-        self.device_type = device_type
-        self.global_delay_factor = global_delay_factor
-        # Gather netmiko connection requirements
-        # Might go away in a later version, depending if the connection has any issues with th auto_connect
-        self.connection_variables = ({**vars(self), **kwargs}).copy()
-        # Added the netmiko class here, Note it will start the connection if auto_connect is set to True
-        self.connection = netmiko.ConnectHandler(**self.connection_variables)
+        # Added the netmiko class here
+        # Note it will start the connection if auto_connect is set to True, Defaulted to False.
+        self.connection = netmiko.ConnectHandler(auto_connect=auto_connect, **kwargs)
         self.model = None
         self.version = None
         self.serial_number = None
