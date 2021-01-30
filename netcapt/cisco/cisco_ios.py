@@ -28,3 +28,17 @@ class CiscoIosDevice(CiscoNetworkDevice):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
+
+    # Need to update this, as it does not always capture all the IPs
+    # This template will work better
+    def show_cdp_neigh_detailed(self, use_textfsm=True):
+        """
+        Captures the Detailed CDP output
+
+        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+
+        :return: List of Detailed CDP Neighbors
+
+        """
+        txt_tmpl = Path("netcapt/ntc-templates/cisco_ios_show_cdp_neighbors_detail.textfsm")
+        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=txt_tmpl)
