@@ -58,6 +58,7 @@ class NetworkDevice(object):
         """
         if not self.connection.is_alive():
             self.connection.establish_connection()
+            self.connection.session_preparation()
 
     def end_connection(self):
         self.connection.disconnect()
