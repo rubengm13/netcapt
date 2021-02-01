@@ -40,5 +40,5 @@ class CiscoIosDevice(CiscoNetworkDevice):
         :return: List of Detailed CDP Neighbors
 
         """
-        txt_tmpl = Path("netcapt/ntc-templates/cisco_ios_show_cdp_neighbors_detail.textfsm")
+        txt_tmpl = Path("netcapt/ntc_templates/cisco_ios_show_cdp_neighbors_detail.textfsm")
         return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=txt_tmpl)
