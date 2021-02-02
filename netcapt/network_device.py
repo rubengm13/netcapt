@@ -1,9 +1,14 @@
 import netmiko
+from unipath import Path
+import os
+
 
 # TODO: Do we need to derive this class from the Netmiko Class?
 #  This will have to be derived on a per device type basis. Might get Tricky with SSH
 class NetworkDevice(object):
-    #TODO: Need to remove the below arguments
+    # Location For TestFSM_templates
+    _textfsm_templates_path = Path(os.path.dirname(__file__)).child('textfsm_templates')
+
     def __init__(
             self,
             auto_connect=False,

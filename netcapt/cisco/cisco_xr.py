@@ -1,5 +1,4 @@
 from .cisco import CiscoNetworkDevice
-from unipath import Path
 
 
 class CiscoXrDevice(CiscoNetworkDevice):
@@ -44,23 +43,23 @@ class CiscoXrDevice(CiscoNetworkDevice):
         :return: List of Detailed CDP Neighbors
         """
         command = 'show vrf all'
-        txt_tmpl = Path("netcapt/ntc_templates/cisco_xr_show_vrf_all.textfsm")
-        return self.send_command(command, use_textfsm=use_textfsm, textfsm_template=txt_tmpl)
+        textfsm_tmpl = self._textfsm_templates_path.child('cisco_xr_show_vrf_all.textfsm')
+        return self.send_command(command, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
 
     def show_arp_vrf(self, vrf, use_textfsm=True):
-        textfsm_tmpl = Path("netcapt/ntc_templates/test_tmpl/cisco_xr_show_arp.textfsm")
+        textfsm_tmpl = self._textfsm_templates_path.child("cisco_xr_show_arp.textfsm")
         return self.send_command("show arp vrf " + vrf, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
 
     def show_arp(self, use_textfsm=True):
-        textfsm_tmpl = Path("netcapt/ntc_templates/test_tmpl/cisco_xr_show_arp.textfsm")
+        textfsm_tmpl = self._textfsm_templates_path.child("cisco_xr_show_arp.textfsm")
         return self.send_command("show arp", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
 
     def show_bgp_vrf(self, vrf, use_textfsm=True):
-        textfsm_tmpl = "netcapt/ntc_templates/test_tmpl/cisco_xr_show_bgp_vrf.textfsm"
+        textfsm_tmpl = self._textfsm_templates_path.child("cisco_xr_show_bgp_vrf.textfsm")
         cmd = 'show bgp vrf {} ipv4 unicast'.format(vrf)
         return self.send_command(cmd, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
 
     def show_inventory(self, use_textfsm=True):
-        textfsm_tmpl = "netcapt/ntc_templates/test_tmpl/cisco_ios_show_inventory.textfsm"
+        textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_inventory.textfsm")
         cmd = 'show inventory'
         return self.send_command(cmd, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)

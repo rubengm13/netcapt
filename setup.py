@@ -9,7 +9,7 @@ setup(
     author='Ruben Gutierrez',
     author_email='rubeng318@ucla.edu',
     description='Capture Network Data from CLI output.',
-    package_data={"netcapt": ["ntc_templates/*"]},
+    package_data={"netcapt": ["textfsm_templates/*"]},
     install_requires=[
         'netmiko'
     ]

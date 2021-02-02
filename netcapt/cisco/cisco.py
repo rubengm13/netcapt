@@ -293,11 +293,13 @@ class CiscoNetworkDevice(NetworkDevice):
             return vlans_list
 
         return_dict = {
-            'vlans_native': Path('netcapt/ntc_templates/cisco_ios_get_intf_native_vlan.textfsm'),
-            'vlans_allowed': Path('netcapt/ntc_templates/cisco_ios_get_intf_allowed_vlan.textfsm'),
-            'vlans_forwarding': Path('netcapt/ntc_templates/cisco_ios_get_intf_trunk_vlan.textfsm'),
-            'vlans_not_pruned': Path('netcapt/ntc_templates/cisco_ios_get_intf_not_pruned_vlan.textfsm'),
+            'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
+            'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
+            'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
+            'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
         }
+        for key, val in return_dict.items():
+            return_dict[key] = self._textfsm_templates_path.child(val)
 
         for vlan_list, template_path in return_dict.items():
             return_dict[vlan_list] = __get_vlan_list(template_path)

@@ -1,5 +1,4 @@
 from .cisco import CiscoNetworkDevice
-from unipath import Path
 from .. import functions as hf
 
 
@@ -40,5 +39,5 @@ class CiscoIosDevice(CiscoNetworkDevice):
         :return: List of Detailed CDP Neighbors
 
         """
-        txt_tmpl = Path("netcapt/ntc_templates/cisco_ios_show_cdp_neighbors_detail.textfsm")
-        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=txt_tmpl)
+        textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_cdp_neighbors_detail.textfsm")
+        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
