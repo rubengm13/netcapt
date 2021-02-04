@@ -37,7 +37,7 @@ class CiscoNetworkDevice(NetworkDevice):
         output2 = self.show_cdp_neigh(use_textfsm=True)
         if len(output) != len(output2):
             raise TextFsmParseIssue("ERROR:\n"
-                  "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
+                                    "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
         return output
 
     # Ready
@@ -156,14 +156,16 @@ class CiscoNetworkDevice(NetworkDevice):
             return CiscoConfParse(cfg.splitlines())
         return cfg
 
-    def interface_configuration(self, cfg_location="run"):
+    def interface_configuration(self, cfg_obj=None, cfg_location="run"):
         """
         Returns the Interface objects from the CiscoConfParse object
+        :param cfg_obj:
         :param cfg_location: 'run' to obtain running-configuration or 'start' for startup-configuration
         :return: List of Interface objects
         """
-        cfg = self.configuration(cfg_location=cfg_location, use_parser=True)
-        return cfg.find_objects('^interface')
+        if cfg_obj is None:
+            cfg_obj = self.configuration(cfg_location=cfg_location, use_parser=True)
+        return cfg_obj.find_objects('^interface')
 
     # Show commands with use_textfsm
     def show_inventory(self, use_textfsm=True):
@@ -243,7 +245,10 @@ class CiscoNetworkDevice(NetworkDevice):
         return self.send_command("show ip arp vrf " + vrf, use_textfsm=use_textfsm)
 
     def show_arp(self, use_textfsm=True):
-        return self.send_command("show ip arp ", use_textfsm=use_textfsm)
+        return self.send_command("show ip arp", use_textfsm=use_textfsm)
+
+    def show_ip_mroute_summary(self, use_textfsm=True):
+        return self.send_command("show ip mroute summary", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False, factory=False):
@@ -275,6 +280,7 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         Parses the 'show int trunk' response, only works on cisco_ios
         """
+
         def __parse_dictionary_data(list_of_dict):
             if isinstance(list_of_dict, str):
                 return None
@@ -305,3 +311,15 @@ class CiscoNetworkDevice(NetworkDevice):
             return_dict[vlan_list] = __get_vlan_list(template_path)
 
         return return_dict
+
+    def get_sfp(self):
+        """
+        Obtain a list of SFP Inventory
+        :return: list of SFP Inventory
+        """
+        inventory = self.gather_inventory()
+        sfp_list = list()
+        for item in inventory:
+            if 'sfp' in item["description"].lower():
+                sfp_list.append(item)
+        return sfp_list
