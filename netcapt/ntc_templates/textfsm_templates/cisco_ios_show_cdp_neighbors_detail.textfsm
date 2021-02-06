@@ -17,7 +17,7 @@ Start
   # Capture time-stamp if vty line has command time-stamping turned on
   ^Load\s+for\s+
   ^Time\s+source\s+is
-  ^Management address\(es\): -> GetIP
+  ^Management address\(es\): -> GetMgmtIP
   ^----------- -> Record
   ^Total -> Record
 
@@ -31,5 +31,5 @@ ParseIP
 GetVersion
   ^${SOFTWARE_VERSION} -> Start
 
-GetIP
+GetMgmtIP
   ^.*IP.+address: ${MANAGEMENT_IP} -> Start

@@ -30,14 +30,14 @@ class CiscoIosDevice(CiscoNetworkDevice):
 
     # Need to update this, as it does not always capture all the IPs
     # This template will work better
-    def show_cdp_neigh_detailed(self, use_textfsm=True):
-        """
-        Captures the Detailed CDP output
-
-        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
-
-        :return: List of Detailed CDP Neighbors
-
-        """
-        textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_cdp_neighbors_detail.textfsm")
-        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+    # def show_cdp_neigh_detailed(self, use_textfsm=True):
+    #     """
+    #     Captures the Detailed CDP output
+    #
+    #     :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
+    #
+    #     :return: List of Detailed CDP Neighbors
+    #
+    #     """
+    #     textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_cdp_neighbors_detail.textfsm")
+    #     return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
