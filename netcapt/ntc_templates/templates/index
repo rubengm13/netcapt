@@ -383,6 +383,8 @@ dell_powerconnect_show_interfaces_description.textfsm, .*, dell_powerconnect, sh
 dell_powerconnect_show_bridge_address_table.textfsm, .*, dell_powerconnect, sh[[ow]] br[[idge]] a[[ddress-table]]
 dell_powerconnect_show_interfaces_status.textfsm, .*, dell_powerconnect, sh[[ow]] int[[erfaces]] st[[atus]]
 
+extreme_exos_show_lldp_neighbors_detail.textfsm, .*, extreme_exos, sh[[ow]] lldp nei[[ghbors]] det[[ail]]
+
 fortinet_get_router_info_bgp_summary.textfsm, .*, fortinet, g[[et]] r[[outer]] info bg[[p]] su[[mmary]]
 fortinet_get_system_interface.textfsm, .*, fortinet, [[g]]et [[s]]ystem [[i]]nterface
 fortinet_get_system_status.textfsm, .*, fortinet, [[g]]et [[s]]ystem [[s]]tatus
