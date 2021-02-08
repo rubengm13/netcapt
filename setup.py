@@ -11,6 +11,7 @@ setup(
     description='Capture Network Data from CLI output.',
     package_data={"netcapt": ["ntc_templates/*"]},
     install_requires=[
-        'netmiko'
+        'netmiko',
+        'ciscoconfparse'
     ]
 )
