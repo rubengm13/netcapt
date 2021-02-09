@@ -24,15 +24,23 @@ class NetworkDevice(object):
         # Note it will start the connection if auto_connect is set to True, Defaulted to False.
         self.connection = netmiko.ConnectHandler(auto_connect=auto_connect, verbose=verbose, **kwargs)
 
+
+        if self.connection.is_alive():
+            self.update_hostname()
+
         self.host = kwargs['host']
         self.verbose = verbose
-        self.model = None
-        self.version = None
-        self.serial_number = None
-        self.hostname = None
+        self.model = str()
+        self.version = str()
+        self.serial_number = str()
+        self.hostname = str()
 
     def __str__(self):
         return "<%s | host: %s>"% (self.classname, self.host)
+
+    def update_hostname(self):
+        """Gets Hostname from the Connection and saves it to the device."""
+        self.hostname = self.connection.find_prompt()[:-1]
 
     # Gather Functions
     # Most are Empty Place holders for respective Device Gathers
@@ -88,6 +96,7 @@ class NetworkDevice(object):
         if not self.connection.is_alive():
             self.connection.establish_connection()
             self.connection.session_preparation()
+            self.update_hostname()
 
     def start_connect_w_retry(self, max_attempts=3):
         """
