@@ -1,5 +1,6 @@
 from .cisco import CiscoNetworkDevice
 from .. import functions as hf
+import re
 
 
 class TextFsmParseIssue(Exception):
@@ -7,7 +8,6 @@ class TextFsmParseIssue(Exception):
 
 
 class CiscoWlcDevice(CiscoNetworkDevice):
-
     def gather_ap(self):
         """
         Gather the AP Summary and combine the data with each AP Gather
@@ -25,19 +25,29 @@ class CiscoWlcDevice(CiscoNetworkDevice):
                 )
         return ap_sum
 
+    def gather_inventory(self):
+        inventory = self.send_command('show inventory', use_textfsm=True)
+        for line in inventory:
+            line['name'] = self.hostname
+        inventory += self.send_command('show ap inventory all', use_textfsm=True)
+        inventory
+        return inventory
+
+    def gather_version(self):
+        return self.send_command('show sysinfo', use_textfsm=True)
 
     # TODO: Consider if we need to override the cmd_verify per command or just here.
     # def send_command(self, command, cmd_verify=False, **kwargs):
     #     return self.connection.send_command(command_string=command, )
-
     def show_cdp_neigh_detail(self, use_textfsm=True, cmd_verify=False):
         """
         Captures the Detailed CDP output
-
         :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
-
         :return: List of Detailed CDP Neighbors
-
         """
-        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, cmd_verify=cmd_verify)
+        return self.send_command("show cdp neighbors detail", use_textfsm=use_textfsm, cmd_verify=cmd_verify)
 
+    def update_hostname(self):
+        """Gets Hostname from the Connection and saves it to the device."""
+        prompt = self.connection.find_prompt()
+        self.hostname = re.match(r'\((\S+)\)', prompt).group(1)

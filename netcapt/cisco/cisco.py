@@ -12,7 +12,6 @@ class CiscoNetworkDevice(NetworkDevice):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.vrf_names = None
-        self.hostname = str()
 
     # Gather Commands
     # TODO: add a gather all, that will gather all the Gather commands
