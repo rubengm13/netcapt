@@ -1,11 +1,13 @@
-from .cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice
+from .cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice, CiscoWlcDevice
 import netmiko
 
 
 DEVICE_MAPPER = {
     "cisco_ios": CiscoIosDevice,
     "cisco_xr": CiscoXrDevice,
-    "cisco_nxos": CiscoNxosDevice
+    "cisco_nxos": CiscoNxosDevice,
+    "cisco_wlc": CiscoWlcDevice
+
 }
 
 SUPPORTED_DEVICES_str = list(DEVICE_MAPPER.keys())

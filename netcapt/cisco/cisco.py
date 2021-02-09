@@ -33,7 +33,7 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # Ready
     def gather_cdp(self):
-        output = self.show_cdp_neigh_detailed(use_textfsm=True)
+        output = self.show_cdp_neigh_detail(use_textfsm=True)
         output2 = self.show_cdp_neigh(use_textfsm=True)
         if len(output) != len(output2):
             raise TextFsmParseIssue("ERROR:\n"
@@ -194,7 +194,7 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         return self.send_command("show vrf", use_textfsm=use_textfsm)
 
-    def show_cdp_neigh_detailed(self, use_textfsm=True):
+    def show_cdp_neigh_detail(self, use_textfsm=True):
         """
         Captures the Detailed CDP output
 

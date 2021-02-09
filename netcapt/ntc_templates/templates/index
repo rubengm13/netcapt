@@ -318,6 +318,7 @@ cisco_wlc_ssh_show_redundancy_detail.textfsm, .*, cisco_wlc_ssh, sh[[ow]] red[[u
 cisco_wlc_ssh_show_mobility_anchor.textfsm, .*, cisco_wlc_ssh, sh[[ow]] mo[[bility]] an[[chor]]
 cisco_wlc_ssh_show_radius_summary.textfsm, .*, cisco_wlc_ssh, sh[[ow]] ra[[dius]] s[[ummary]]
 cisco_wlc_ssh_show_tacacs_summary.textfsm, .*, cisco_wlc_ssh, sh[[ow]] ta[[cacs]] s[[ummary]]
+cisco_wlc_ssh_show_cdp_neighbors.textfsm, .*, cisco_wlc_ssh, sh[[ow]] c[[dp]] neig[[hbors]]
 cisco_wlc_ssh_show_client_detail.textfsm, .*, cisco_wlc_ssh, sh[[ow]] cl[[ient]] det[[ail]]
 cisco_wlc_ssh_show_exclusionlist.textfsm, .*, cisco_wlc_ssh, sh[[ow]] ex[[clusionlist]]
 cisco_wlc_ssh_show_ap_image_all.textfsm, .*, cisco_wlc_ssh, sh[[ow]] ap ima[[ge]] a[[ll]]
