@@ -14,6 +14,10 @@ SUPPORTED_DEVICES_str = list(DEVICE_MAPPER.keys())
 SUPPORTED_DEVICES_str = "\n".join(SUPPORTED_DEVICES_str)
 
 
+class UnableToDetectDeviceType(Exception):
+    pass
+
+
 # TODO: Need to discuss how we are going to run this, do we have it return an empty if Value does not
 #  exist or no match or raise an error
 # noinspection PyPep8Naming
@@ -24,9 +28,8 @@ def GetNetworkDevice(**kwargs):
     :return: Network Device Class or None
     """
     # Auto Detect device type with netmiko or extract the device type from the device_type option
-    if kwargs['device_type'] == 'autodetect':
+    if 'autodetect' in kwargs['device_type']:
         netmiko_args = kwargs.copy()
-        netmiko_args['auto_connect'] = True
         net_dev_type = guess_device_type(**netmiko_args)
         if net_dev_type:
             kwargs['device_type'] = net_dev_type + '_ssh'
