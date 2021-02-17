@@ -134,10 +134,13 @@ class NetworkDevice(object):
     def send_config_file(self, filename):
         self.connection.send_config_from_file(filename)
 
-    def keep_alive(self, maintain_connection):
-        if not maintain_connection:
-
-            self.end_connection()
+    def start_raw_cli_log(self, log_file_path):
+        """
+        Save the Raw CLI Logs
+        :param log_file_path: Path to file to save the Raw CLI  log
+        """
+        self.connection.open_session_log(log_file_path, "append")
+        self.verbose_msg("Session Logging has been enabled")
 
     def pretty_print_msg(self, msg):
         """
@@ -146,10 +149,8 @@ class NetworkDevice(object):
         :param msg: msg to pretty print
         :return: None
         """
-        line2 = str(self.host)
-        if len(line2) < 15:
-            line2 += (15 - len(line2)) * " "
-        print(line2, "|", msg)
+        out_msg = self.__str__() + ' : ' + msg
+        print(out_msg)
 
     @property
     def classname(self):
@@ -161,6 +162,8 @@ class NetworkDevice(object):
             if len(line1) < 15:
                 line1 += (15 - len(line1)) * " "
             print(self, "verbose:", msg)
+
+
 
 def test_print():
     print("This is a test of test broadcast system")
