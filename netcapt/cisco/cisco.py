@@ -168,7 +168,7 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # Show commands with use_textfsm
     def show_inventory(self, use_textfsm=True):
-        return self.send_command("show version", use_textfsm=use_textfsm)
+        return self.send_command("show inventory", use_textfsm=use_textfsm)
 
     def show_ip_bgp(self, use_textfsm=True):
         return self.send_command("show ip bgp", use_textfsm=use_textfsm)
