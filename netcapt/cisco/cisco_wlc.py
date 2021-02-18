@@ -50,7 +50,6 @@ class CiscoWlcDevice(CiscoNetworkDevice):
     def update_hostname(self):
         """Gets Hostname from the Connection and saves it to the device."""
         prompt = self.connection.find_prompt()
-        print(prompt)
         self.hostname = re.match(r'\((\S+)\)', prompt).group(1)
 
     def count_intf(self):
