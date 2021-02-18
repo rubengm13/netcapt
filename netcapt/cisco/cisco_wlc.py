@@ -35,7 +35,7 @@ class CiscoWlcDevice(CiscoNetworkDevice):
 
     def gather_version(self):
         gather_output = self.send_command('show sysinfo', use_textfsm=True)
-        gather_output.update(self.send_command('show inventory', use_textfsm=True)[0])
+        gather_output[0].update(self.send_command('show inventory', use_textfsm=True)[0])
         return gather_output
 
     # TODO: Consider if we need to override the cmd_verify per command or just here.
