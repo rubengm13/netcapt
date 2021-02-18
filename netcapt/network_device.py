@@ -163,6 +163,8 @@ class NetworkDevice(object):
                 line1 += (15 - len(line1)) * " "
             print(self, "verbose:", msg)
 
+    def is_connect_alive(self):
+        return self.connection.is_alive()
 
 
 def test_print():

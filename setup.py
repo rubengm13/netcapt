@@ -9,7 +9,8 @@ setup(
     author='Ruben Gutierrez',
     author_email='rubeng318@ucla.edu',
     description='Capture Network Data from CLI output.',
-    package_data={"netcapt": ["ntc_templates/*"]},
+    include_package_data=True,
+    package_data={"netcapt": ["ntc_templates/textfsm_templates/*", "ntc_templates/templates/*"]},
     install_requires=[
         'netmiko',
         'ciscoconfparse'
