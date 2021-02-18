@@ -2,7 +2,7 @@ from ..network_device import NetworkDevice
 from ciscoconfparse import CiscoConfParse
 from unipath import Path
 from .. import functions as hf
-
+import re
 
 class TextFsmParseIssue(Exception):
     pass
@@ -322,3 +322,29 @@ class CiscoNetworkDevice(NetworkDevice):
             if 'sfp' in item["description"].lower():
                 sfp_list.append(item)
         return sfp_list
+
+    def count_intf(self):
+        intf_counts = {
+            "Ethernet": {"count": 0, "active": 0},
+            "FastEthernet": {"count": 0, "active": 0},
+            "GigabitEthernet": {"count": 0, "active": 0},
+            "TenGigEthernet": {"count": 0, "active": 0},
+            "TwentyFiveGigEthernet": {"count": 0, "active": 0},
+            "FortyGigEthernet": {"count": 0, "active": 0},
+            "HundredGigEthernet": {"count": 0, "active": 0},
+            "Serial": {"count": 0, "active": 0},
+            "Subinterfaces": {"count": 0, "active": 0},
+            "Tunnel": {"count": 0, "active": 0},
+            "Port-channel": {"count": 0, "active": 0},
+            "Loopback": {"count": 0, "active": 0},
+            "VLAN": {"count": 0, "active": 0}
+        }
+        interface_list = self.show_interface()
+        for intf in interface_list:
+            for key, vals in intf_counts.items():
+                intf_stripped = re.match(r'^([a-zA-Z]+)', intf['interface']).group(1)
+                if key.lower() == intf_stripped.lower():
+                    intf_counts[key]['count'] += 1
+                    if intf['link_status'] == 'up':
+                        intf_counts[key]['active'] += 1
+        return intf_counts
