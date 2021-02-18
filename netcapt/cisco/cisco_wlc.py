@@ -30,7 +30,6 @@ class CiscoWlcDevice(CiscoNetworkDevice):
         for line in inventory:
             line['name'] = self.hostname
         inventory += self.send_command('show ap inventory all', use_textfsm=True)
-        inventory
         return inventory
 
     def gather_version(self):
