@@ -28,6 +28,14 @@ def GetNetworkDevice(**kwargs):
     :return: Network Device Class or None
     """
     # Auto Detect device type with netmiko or extract the device type from the device_type option
+
+    auto_con_orig_val = None
+    # TODO Need to move this unwanted_args function
+    if 'auto_con_orig_val' in kwargs.keys():
+        if not kwargs['auto_con_orig_val']:
+            auto_con_orig_val = False
+            kwargs['auto_con_orig_val'] = True
+
     if 'autodetect' in kwargs['device_type']:
         netmiko_args = kwargs.copy()
         net_dev_type = guess_device_type(**netmiko_args)
@@ -45,6 +53,9 @@ def GetNetworkDevice(**kwargs):
         raise ValueError('Unsupported Device Type, the following devices are currently supported:\n'
                          + SUPPORTED_DEVICES_str)
     network_device = DEVICE_MAPPER[net_dev_type]
+    if not auto_con_orig_val:
+        kwargs['auto_connect'] = False
+
     return network_device(**kwargs)
 
 
@@ -59,3 +70,10 @@ def guess_device_type(**kwargs):
         print('Auto detecting device type for:', kwargs['host'])
     guesser = netmiko.SSHDetect(**kwargs)
     return guesser.autodetect()
+
+def remove_unwanted_args(**kwargs):
+
+    unwanted_args = ['auto_connect']
+    for unwant_arg in unwanted_args:
+        if unwant_arg in kwargs.keys():
+            pass
