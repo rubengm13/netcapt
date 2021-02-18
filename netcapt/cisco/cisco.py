@@ -122,6 +122,10 @@ class CiscoNetworkDevice(NetworkDevice):
     # Ready
     def gather_version(self):
         output = self.show_version(use_textfsm=True)
+        # Adding CPU Processes tp gather_version
+        data = self.send_command('show processes cpu', use_textfsm=True)
+        if isinstance(data, list):
+            output[0].update(data[0])
         return output
 
     # Gather specific Data and parse it as needed
