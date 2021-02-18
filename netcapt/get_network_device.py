@@ -10,9 +10,6 @@ DEVICE_MAPPER = {
 
 }
 
-SUPPORTED_DEVICES_str = list(DEVICE_MAPPER.keys())
-SUPPORTED_DEVICES_str = "\n".join(SUPPORTED_DEVICES_str)
-
 
 class UnableToDetectDeviceType(Exception):
     pass
@@ -29,15 +26,10 @@ def GetNetworkDevice(**kwargs):
     """
     # Auto Detect device type with netmiko or extract the device type from the device_type option
 
-    auto_con_orig_val = None
-    # TODO Need to move this unwanted_args function
-    if 'auto_con_orig_val' in kwargs.keys():
-        if not kwargs['auto_con_orig_val']:
-            auto_con_orig_val = False
-            kwargs['auto_con_orig_val'] = True
-
     if 'autodetect' in kwargs['device_type']:
         netmiko_args = kwargs.copy()
+        # Need to enable Auto Connect otherwise it fails.
+        netmiko_args['auto_connect'] = True
         net_dev_type = guess_device_type(**netmiko_args)
         if net_dev_type:
             kwargs['device_type'] = net_dev_type + '_ssh'
@@ -46,15 +38,17 @@ def GetNetworkDevice(**kwargs):
         # TODO: Need to consider what to do if we get back a None, currently it shouldn't be a problem. Needs to be
         #  resolved by the time we start the Network Crawl option.
     else:
-        net_dev_type = kwargs['device_type'].split('_')
-        net_dev_type = '_'.join(net_dev_type[:2])
+        net_dev_type = kwargs['device_type']
+        # Strip ssh or telnet tag
+        if net_dev_type[-4:] == '_ssh':
+            net_dev_type = net_dev_type[:-4]
+        elif net_dev_type[-7:] == '_telnet':
+            net_dev_type = net_dev_type[:-7]
 
-    if net_dev_type not in DEVICE_MAPPER:
+    if net_dev_type not in DEVICE_MAPPER.keys():
         raise ValueError('Unsupported Device Type, the following devices are currently supported:\n'
-                         + SUPPORTED_DEVICES_str)
+                         + '\n'.join(DEVICE_MAPPER.keys()))
     network_device = DEVICE_MAPPER[net_dev_type]
-    if not auto_con_orig_val:
-        kwargs['auto_connect'] = False
 
     return network_device(**kwargs)
 
@@ -70,10 +64,3 @@ def guess_device_type(**kwargs):
         print('Auto detecting device type for:', kwargs['host'])
     guesser = netmiko.SSHDetect(**kwargs)
     return guesser.autodetect()
-
-def remove_unwanted_args(**kwargs):
-
-    unwanted_args = ['auto_connect']
-    for unwant_arg in unwanted_args:
-        if unwant_arg in kwargs.keys():
-            pass
