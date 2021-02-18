@@ -22,7 +22,7 @@ class NetworkDevice(object):
     ):
         # Added the netmiko class here
         # Note it will start the connection if auto_connect is set to True, Defaulted to False.
-        self.connection = netmiko.ConnectHandler(auto_connect=auto_connect, verbose=verbose, **kwargs)
+        self.connection = netmiko.ConnectHandler(auto_connect=auto_connect, **kwargs)
 
         self.host = kwargs['host']
         self.verbose = verbose
