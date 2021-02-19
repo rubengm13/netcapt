@@ -80,7 +80,6 @@ class CiscoNetworkDevice(NetworkDevice):
                 # Checking every interface not jus Layer 3
                 if isinstance(vrf_info, list):
                     for vrf in vrf_info:
-                        print(self, vrf)
                         for intf_vrf in vrf['interface']:
                             if intf_vrf.lower() in hf.intf_abbvs(intf['interface']):
                                 intf = vrf['name']
@@ -125,9 +124,38 @@ class CiscoNetworkDevice(NetworkDevice):
         # TODO: Need to continue work on this for NXOS and XR
         return self.show_mac_address_table()
 
+    # TODO: Need to improve this
     def gather_route(self):
-        pass
-        # TODO: complete the gather_route for all devices
+        vrf_list = self.vrf_names
+        route_list = []
+        route_table_present = False
+        for vrf in vrf_list:
+            vrf_string = ""
+            if vrf != "global":
+                vrf_string = " vrf " + vrf
+            command = "show route" + vrf_string
+            output = self.send_command(command, use_textfsm=True)
+            if isinstance(output, list):
+                for route in output:
+                    route["cidr"] = route['network'] + "/" + route['mask']
+                    if "vrf" not in list(route.keys()):
+                        route["vrf"] = vrf
+                    route_list.append(route)
+                    route_table_present = True
+            if not route_table_present:
+                route = {}
+                default_gateway = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", output)
+                route["vrf"] = vrf
+                route["protocol"] = "Layer 2 only"
+                if default_gateway:
+                    route["nexthop_ip"] = default_gateway[0]
+                else:
+                    output2 = self.send_command("show run | incl default-gateway")
+                    default_gateway = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", output2)
+                    if default_gateway:
+                        route["nexthop_ip"] = default_gateway[0]
+                route_list.append(route)
+        return route_list
 
     # Ready
     def gather_version(self):
@@ -332,29 +360,20 @@ class CiscoNetworkDevice(NetworkDevice):
         return sfp_list
 
     def count_intf(self):
-        intf_counts = {
-            "Ethernet": {"count": 0, "active": 0},
-            "FastEthernet": {"count": 0, "active": 0},
-            "GigabitEthernet": {"count": 0, "active": 0},
-            "TenGigEthernet": {"count": 0, "active": 0},
-            "TwentyFiveGigEthernet": {"count": 0, "active": 0},
-            "FortyGigEthernet": {"count": 0, "active": 0},
-            "HundredGigEthernet": {"count": 0, "active": 0},
-            "Serial": {"count": 0, "active": 0},
-            "Subinterfaces": {"count": 0, "active": 0},
-            "Tunnel": {"count": 0, "active": 0},
-            "Port-channel": {"count": 0, "active": 0},
-            "Loopback": {"count": 0, "active": 0},
-            "VLAN": {"count": 0, "active": 0}
-        }
+        intf_counts = dict()
         interface_list = self.show_interface()
         for intf in interface_list:
-            for key, vals in intf_counts.items():
-                intf_stripped = re.match(r'^([a-zA-Z]+)', intf['interface']).group(1)
-                if key.lower() == intf_stripped.lower():
-                    intf_counts[key]['count'] += 1
-                    if intf['link_status'] == 'up':
-                        intf_counts[key]['active'] += 1
+            # Strip the Interface Number
+            intf_stripped = re.match(r'^([a-zA-Z]+)', intf['interface']).group(1)
+
+            # Add Interface Type if it does not already exist
+            if intf_stripped not in intf_counts.keys():
+                intf_counts[intf_stripped] = {'count': 0, 'active': 0}
+
+            # Add the Counts
+            intf_counts[intf_stripped]['count'] += 1
+            if intf['link_status'] == 'up':
+                intf_counts[intf_stripped]['active'] += 1
         return intf_counts
 
     def get_vrf_info(self):

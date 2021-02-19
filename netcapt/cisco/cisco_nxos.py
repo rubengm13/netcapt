@@ -38,9 +38,7 @@ class CiscoNxosDevice(CiscoNetworkDevice):
         return arp_list
 
     def get_vrf_info(self):
-        print(1)
         return self.show_vrf_interface()
 
     def show_vrf_interface(self, use_textfsm=True):
-        print(2)
         return self.send_command('show vrf interface', use_textfsm=use_textfsm)

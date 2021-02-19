@@ -165,7 +165,3 @@ class NetworkDevice(object):
 
     def is_connect_alive(self):
         return self.connection.is_alive()
-
-
-def test_print():
-    print("This is a test of test broadcast system")
