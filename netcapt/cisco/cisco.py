@@ -107,7 +107,7 @@ class CiscoNetworkDevice(NetworkDevice):
         output = self.show_lldp_neigh_detailed(use_textfsm=True)
         output2 = self.show_lldp_neigh(use_textfsm=True)
         if len(output) != len(output2):
-            print("ERROR:\n"
+            print(self, "ERROR:\n"
                   "\tThe detailed LLDP count does not equal the regular LLDP count, please check the TextFSM file")
         return output
 

@@ -1,10 +1,10 @@
-Value Required DEST_HOST (\S+)
+Value Required DESTINATION_HOST (\S+)
 Value SYSNAME (.*)
 Value PLATFORM (.*)
 Value SOFTWARE_VERSION (.*)
 Value CAPABILITIES (.+?)
 Value LOCAL_PORT (.*)
-Value List MGMT_IP (.*)
+Value List MANAGEMENT_IP (.*)
 Value REMOTE_PORT (.*)
 Value List INTERFACE_IP (.*)
 
@@ -12,8 +12,7 @@ Start
   ^Device ID: ${DESTINATION_HOST}
   ^System Name: ${SYSNAME}
   ^Entry address\(es\)\s*:\s* -> ParseIP
-  ^Platform\s*:\s*${PLATFORM}\s*,\s*Capabilities\s*:\s*${CAPABILITIES}\s+$$
-  ^Platform\s*:\s*${PLATFORM}\s*,\s*Capabilities\s*:\s*${CAPABILITIES}$$
+  ^Platform\s*:\s*${PLATFORM}\s*,\s*Capabilities\s*:\s*${CAPABILITIES}\s*$$
   ^Interface: ${LOCAL_PORT},  Port ID \(outgoing port\): ${REMOTE_PORT}
   ^Version : -> GetVersion
   # Capture time-stamp if vty line has command time-stamping turned on
@@ -21,16 +20,17 @@ Start
   ^Time\s+source\s+is
   ^Management address\(es\): -> GetMgmtIP
   ^----------- -> Record
-  ^Total -> Record
 
 ParseIP
-  ^.*IP address: ${INTERFACE_IP}
+  ^.*IP.+[aA]ddress: ${INTERFACE_IP}
   ^Platform\s*:\s*${PLATFORM}\s*,\s*Capabilities\s*:\s*${CAPABILITIES}\s*$$ -> Start
   ^.* -> Start
-
 
 GetVersion
   ^${SOFTWARE_VERSION} -> Start
 
 GetMgmtIP
-  ^.*IP.+address: ${MANAGEMENT_IP} -> Start
+  ^.*IP.+[aA]ddress: ${MANAGEMENT_IP}
+  ^----------- -> Record Start
+  ^\s*$$
+  ^.* -> Error

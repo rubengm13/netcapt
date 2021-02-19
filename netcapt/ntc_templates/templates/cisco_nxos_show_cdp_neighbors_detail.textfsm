@@ -1,30 +1,31 @@
-Value Required DEST_HOST (.*)
+Value Required DESTINATION_HOST (.*)
 Value SYSNAME (.*)
 Value PLATFORM (.*)
 Value SOFTWARE_VERSION (.*)
 Value CAPABILITIES (.*[^\s])
 Value LOCAL_PORT (.*)
-Value List MGMT_IP (.*)
+Value List MANAGEMENT_IP (.*)
 Value REMOTE_PORT (.*)
 Value List INTERFACE_IP (.*)
 
 Start
-  ^Device ID:${DEST_HOST}
+  ^Device ID:${DESTINATION_HOST}
   ^System Name: ${SYSNAME}
   ^Interface address\(es\): -> GetInterfaceIP
-  ^Mgmt address\(es\): -> GetIP
+  ^Mgmt address\(es\): -> GetMgmtIP
   ^Platform: ${PLATFORM}, Capabilities: ${CAPABILITIES}\s*$$
   ^Interface: ${LOCAL_PORT}, Port ID \(outgoing port\): ${REMOTE_PORT}
   ^Version: -> GetVersion
   ^----- -> Record
 
-GetIP
-  ^.*IP.+Address: ${MGMT_IP}
+GetMgmtIP
+  ^.*IP.+[aA]ddress: ${MANAGEMENT_IP}
   ^----- -> Record Start
+  ^\s*$$
   ^.* -> Error
 
 GetInterfaceIP
-  ^.*IP.+Address: ${INTERFACE_IP}
+  ^.*IP.+[aA]ddress: ${INTERFACE_IP}
   ^Platform\s*:\s*${PLATFORM}\s*,\s*Capabilities\s*:\s*${CAPABILITIES}\s*$$ -> Start
   ^.* -> Start
 
