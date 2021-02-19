@@ -127,7 +127,7 @@ class CiscoNetworkDevice(NetworkDevice):
     # TODO: Need to improve this
     def gather_route(self):
         vrf_list = self.vrf_names
-        route_list = []
+        route_list = list()
         route_table_present = False
         for vrf in vrf_list:
             vrf_string = ""
