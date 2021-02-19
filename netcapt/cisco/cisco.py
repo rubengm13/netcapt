@@ -9,6 +9,14 @@ class TextFsmParseIssue(Exception):
 
 
 class CiscoNetworkDevice(NetworkDevice):
+
+    _trunk_dict = {
+        'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
+        'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
+        'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
+        'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.vrf_names = None
@@ -49,7 +57,7 @@ class CiscoNetworkDevice(NetworkDevice):
         # Applies to all of them, will not go through interface_status section because no output
         intf_list = self.show_interface()
         intf_status_list = self.show_interface_status()
-        vrf_info = self.show_vrf()
+        vrf_info = self.get_vrf_info()
 
         # Gather additional trunk data
         trunk_detail = self.get_trunk_dict()
@@ -72,6 +80,7 @@ class CiscoNetworkDevice(NetworkDevice):
                 # Checking every interface not jus Layer 3
                 if isinstance(vrf_info, list):
                     for vrf in vrf_info:
+                        print(self, vrf)
                         for intf_vrf in vrf['interface']:
                             if intf_vrf.lower() in hf.intf_abbvs(intf['interface']):
                                 intf = vrf['name']
@@ -284,7 +293,7 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         Parses the 'show int trunk' response, only works on cisco_ios
         """
-
+        return_dict = self._trunk_dict.copy()
         def __parse_dictionary_data(list_of_dict):
             if isinstance(list_of_dict, str):
                 return None
@@ -302,12 +311,6 @@ class CiscoNetworkDevice(NetworkDevice):
             vlans_list = __parse_dictionary_data(vlans_list)
             return vlans_list
 
-        return_dict = {
-            'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
-            'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
-            'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
-            'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
-        }
         for key, val in return_dict.items():
             return_dict[key] = self._textfsm_templates_path.child(val)
 
@@ -353,3 +356,6 @@ class CiscoNetworkDevice(NetworkDevice):
                     if intf['link_status'] == 'up':
                         intf_counts[key]['active'] += 1
         return intf_counts
+
+    def get_vrf_info(self):
+        return self.show_vrf()

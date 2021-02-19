@@ -1,7 +1,18 @@
 from .cisco import CiscoNetworkDevice
+from .. import functions as hf
 
+class TextFsmParseIssue(Exception):
+    pass
 
 class CiscoNxosDevice(CiscoNetworkDevice):
+
+    _trunk_dict = {
+        'vlans_native': 'cisco_nxos_get_intf_native_vlan.textfsm',
+        'vlans_allowed': 'cisco_nxos_get_intf_allowed_vlan.textfsm',
+        'vlans_forwarding': 'cisco_nxos_get_intf_trunk_vlan.textfsm',
+        'vlans_not_pruned': 'cisco_nxos_get_intf_not_pruned_vlan.textfsm',
+    }
+
     def gather_arp(self):
         """
         Captures arp information and utilizing the vrf data it parses the
@@ -25,3 +36,11 @@ class CiscoNxosDevice(CiscoNetworkDevice):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
+
+    def get_vrf_info(self):
+        print(1)
+        return self.show_vrf_interface()
+
+    def show_vrf_interface(self, use_textfsm=True):
+        print(2)
+        return self.send_command('show vrf interface', use_textfsm=use_textfsm)

@@ -1,0 +1,12 @@
+Value Required INTERFACE (\S+)
+Value List VLANS (\S+)
+
+Start
+  ^\s*Port\s+Vlans\s+[aA]llowed\s+on\s+[tT]runk\s*$$ -> INTERFACE_START
+
+INTERFACE_START
+  ^${VLANS}\s*$$
+  ^\S+\s+\S+\s*$$ -> Continue.Record
+  ^${INTERFACE}\s+${VLANS}\s*$$
+  ^-------------
+  ^.* -> Start

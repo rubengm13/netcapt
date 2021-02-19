@@ -63,3 +63,24 @@ class CiscoXrDevice(CiscoNetworkDevice):
         textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_inventory.textfsm")
         cmd = 'show inventory'
         return self.send_command(cmd, use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+
+    def get_vrf_info(self):
+        # TODO: Need to build out a textfsm for this.
+        vrf_names = self.get_vrf_names()
+        return_list = list()
+        for vrf in vrf_names:
+            if vrf != "default":
+                vrf_dict = {}
+                command = "show vrf " + vrf + " detail"
+                output = self.send_command(command)
+                start_log = False
+                for line in output.split("\n"):
+                    if line == "Interfaces:":
+                        start_log = True
+                    elif "Address" in line:
+                        break
+                    elif start_log:
+                        vrf_dict["name"] = vrf
+                        vrf_dict["interfaces"] = line[2:]
+                        return_list.append(vrf_dict.copy())
+        return return_list
