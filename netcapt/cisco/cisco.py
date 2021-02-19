@@ -35,7 +35,6 @@ class CiscoNetworkDevice(NetworkDevice):
         output = self.show_cdp_neigh_detail(use_textfsm=True)
 
         output2 = self.show_cdp_neigh(use_textfsm=True)
-        print(len(output), len(output2))
         if len(output) != len(output2):
             raise TextFsmParseIssue(str(self) + " ERROR:\n"
                                     "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
