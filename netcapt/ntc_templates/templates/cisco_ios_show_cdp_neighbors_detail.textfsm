@@ -33,4 +33,5 @@ GetMgmtIP
   ^.*IP.+[aA]ddress: ${MANAGEMENT_IP}
   ^----------- -> Record Start
   ^\s*$$
+  ^\s*Total
   ^.* -> Error

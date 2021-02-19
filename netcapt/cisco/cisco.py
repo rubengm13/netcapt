@@ -33,9 +33,11 @@ class CiscoNetworkDevice(NetworkDevice):
     # Ready
     def gather_cdp(self):
         output = self.show_cdp_neigh_detail(use_textfsm=True)
+
         output2 = self.show_cdp_neigh(use_textfsm=True)
+        print(len(output), len(output2))
         if len(output) != len(output2):
-            raise TextFsmParseIssue("ERROR:\n"
+            raise TextFsmParseIssue(str(self) + " ERROR:\n"
                                     "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
         return output
 
@@ -107,7 +109,7 @@ class CiscoNetworkDevice(NetworkDevice):
         output = self.show_lldp_neigh_detailed(use_textfsm=True)
         output2 = self.show_lldp_neigh(use_textfsm=True)
         if len(output) != len(output2):
-            print(self, "ERROR:\n"
+            raise TextFsmParseIssue(str(self) + " ERROR:\n"
                   "\tThe detailed LLDP count does not equal the regular LLDP count, please check the TextFSM file")
         return output
 
