@@ -1,10 +1,9 @@
 from .cisco import CiscoNetworkDevice
 from .. import functions as hf
+from ..supported_attr import UnsupportSwitch
 
-class TextFsmParseIssue(Exception):
-    pass
 
-class CiscoNxosDevice(CiscoNetworkDevice):
+class CiscoNxosDevice(CiscoNetworkDevice, UnsupportSwitch):
 
     _trunk_dict = {
         'vlans_native': 'cisco_nxos_get_intf_native_vlan.textfsm',

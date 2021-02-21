@@ -3,6 +3,7 @@ from ciscoconfparse import CiscoConfParse
 from unipath import Path
 from .. import functions as hf
 import re
+from ..netcapt_exceptions import TextFsmParseIssue
 
 class TextFsmParseIssue(Exception):
     pass
@@ -10,16 +11,13 @@ class TextFsmParseIssue(Exception):
 
 class CiscoNetworkDevice(NetworkDevice):
 
+    # mapper for trunk dict method
     _trunk_dict = {
         'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
         'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
         'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
         'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
     }
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.vrf_names = None
 
     # Gather Commands
     # TODO: add a gather all, that will gather all the Gather commands
@@ -126,7 +124,7 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # TODO: Need to improve this
     def gather_route(self):
-        vrf_list = self.vrf_names
+        vrf_list = self.get_vrf_names()
         route_list = list()
         route_table_present = False
         for vrf in vrf_list:
@@ -161,9 +159,17 @@ class CiscoNetworkDevice(NetworkDevice):
     def gather_version(self):
         output = self.show_version(use_textfsm=True)
         # Adding CPU Processes tp gather_version
-        data = self.send_command('show processes cpu', use_textfsm=True)
-        if isinstance(data, list):
-            output[0].update(data[0])
+        cpu_data = self.send_command('show processes cpu', use_textfsm=True)
+        if isinstance(cpu_data, list):
+            output[0].update(cpu_data[0])
+        return output
+
+    def gather_ip_mroute(self):
+        output = self.show_ip_mroute()
+        if 'IP Multicast Forwarding is not enabled.' in output:
+            output = [{"TEST":"IP Multicast Forwarding is not enabled."}]
+        elif isinstance(output, str):
+            raise TextFsmParseIssue("Please Check TextFSM Template, Data is not being parsed.")
         return output
 
     # Gather specific Data and parse it as needed
@@ -288,8 +294,8 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_arp(self, use_textfsm=True):
         return self.send_command("show ip arp", use_textfsm=use_textfsm)
 
-    def show_ip_mroute_summary(self, use_textfsm=True):
-        return self.send_command("show ip mroute summary", use_textfsm=use_textfsm)
+    def show_ip_mroute(self, use_textfsm=True):
+        return self.send_command("show ip mroute", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False, factory=False):

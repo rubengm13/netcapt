@@ -1,7 +1,8 @@
 from .cisco import CiscoNetworkDevice
+from ..supported_attr import UnsupportSwitch
 
 
-class CiscoXrDevice(CiscoNetworkDevice):
+class CiscoXrDevice(CiscoNetworkDevice, UnsupportSwitch):
     # Modified Gathered Commands
     def gather_bgp(self):
         vrf_names = self.get_vrf_names()

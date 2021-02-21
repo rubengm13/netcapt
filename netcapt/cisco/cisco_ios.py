@@ -1,12 +1,13 @@
 from .cisco import CiscoNetworkDevice
 from .. import functions as hf
+from ..supported_attr import UnsupportSwitch
 
 
 class TextFsmParseIssue(Exception):
     pass
 
 
-class CiscoIosDevice(CiscoNetworkDevice):
+class CiscoIosDevice(CiscoNetworkDevice, UnsupportSwitch):
     def gather_arp(self):
         """
         Captures arp information and utilizing the vrf data it parses the

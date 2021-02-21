@@ -1,13 +1,11 @@
 from .cisco import CiscoNetworkDevice
 from .. import functions as hf
 import re
+from ..netcapt_exceptions import GatherAttributeError
+from ..supported_attr import UnsupportWirelessControllerAttr
 
 
-class TextFsmParseIssue(Exception):
-    pass
-
-
-class CiscoWlcDevice(CiscoNetworkDevice):
+class CiscoWlcDevice(CiscoNetworkDevice, UnsupportWirelessControllerAttr):
     def gather_ap(self):
         """
         Gather the AP Summary and combine the data with each AP Gather
@@ -55,3 +53,4 @@ class CiscoWlcDevice(CiscoNetworkDevice):
 
     def count_intf(self):
         return dict()
+
