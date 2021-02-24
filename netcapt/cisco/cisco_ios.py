@@ -28,3 +28,9 @@ class CiscoIosDevice(CiscoNetworkDevice, UnsupportSwitch):
                 arp = {'vrf': vrf, 'address': "No ARP Data Found"}
                 arp_list.append(arp)
         return arp_list
+
+    def get_vrf_names(self):
+        vrf_names = ['global']
+        vrf_names += super(CiscoIosDevice, self).get_vrf_names()
+        return vrf_names
+

@@ -36,8 +36,15 @@ class CiscoNxosDevice(CiscoNetworkDevice, UnsupportSwitch):
                 arp_list.append(arp)
         return arp_list
 
+    def gather_route(self):
+        vrf_names = self.get_vrf_names()
+        route_list = list()
+        for vrf in vrf_names:
+            route_list += self.send_command('show ip route vrf %s' % vrf)
+
     def get_vrf_info(self):
         return self.show_vrf_interface()
 
     def show_vrf_interface(self, use_textfsm=True):
         return self.send_command('show vrf interface', use_textfsm=use_textfsm)
+

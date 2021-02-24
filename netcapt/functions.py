@@ -36,12 +36,14 @@ def get_short_if_name(interface, device_type):
 def find_intf_data(intf_name, data_list, intf_key='interface', key=None, join_sep=None):
     """
     Find the list of
-    :param data_list:
+    :param intf_key: Interface Key to look for in the Data
+    :param data_list: List of Dictionaries to loop through till we find the Interface
     :param join_sep:
-    :param intf_name:
+    :param intf_name: Name of Interface to look for
     :param key:
     :return:Value or None if None is found
     """
+
     for t_intf in data_list:
         if t_intf[intf_key].lower() in intf_abbvs(intf_name):
             if key is not None:

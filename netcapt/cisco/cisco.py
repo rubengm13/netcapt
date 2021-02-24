@@ -86,19 +86,20 @@ class CiscoNetworkDevice(NetworkDevice):
                 if isinstance(intf_status_list, list):
                     intf_status = hf.find_intf_data(intf['interface'], intf_status_list, 'port')
                     # Only if a value was found
-                    if intf_status and intf_status['vlan'] == 'trunk':
+                    if intf_status:
                         if intf_status['vlan'].isnumeric():
                             intf['vlan'] = intf_status['vlan']
-                        intf['trunk_access'] = 'Trunk'
-                        intf['native'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_native'], 'vlans', ''
-                        )
-                        intf['allowed'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_allowed'], 'vlans', ''
-                        )
-                        intf['not_pruned'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_not_pruned'], 'vlans', ''
-                        )
+                        elif intf_status['vlan'] == 'trunk':
+                            intf['trunk_access'] = 'Trunk'
+                            intf['native'] = hf.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_native'], 'interface', 'vlans'
+                            )
+                            intf['allowed'] = hf.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_allowed'], 'interface', 'vlans'
+                            )
+                            intf['not_pruned'] = hf.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_not_pruned'], 'interface', 'vlans'
+                            )
             return intf_list
 
         elif isinstance(intf_list, str):
@@ -122,7 +123,7 @@ class CiscoNetworkDevice(NetworkDevice):
         # TODO: Need to continue work on this for NXOS and XR
         return self.show_mac_address_table()
 
-    # TODO: Need to improve this
+    # TODO: Need to Fix this this
     def gather_route(self):
         vrf_list = self.get_vrf_names()
         route_list = list()
@@ -166,8 +167,13 @@ class CiscoNetworkDevice(NetworkDevice):
 
     def gather_ip_mroute(self):
         output = self.show_ip_mroute()
+        # Need to determine if the table was empty
+        re_match = re.match(r'^IP Multicast Routing Table for VRF\s+\S+\n+$', output)
         if 'IP Multicast Forwarding is not enabled.' in output:
-            output = [{"TEST":"IP Multicast Forwarding is not enabled."}]
+            output = [{"no_data": "IP Multicast Forwarding is not enabled."}]
+        elif re_match:
+            # if re_match then the rable was empty and not a TextFSM Issue.
+            output = [{"no_data": "No show ip mroute data"}]
         elif isinstance(output, str):
             raise TextFsmParseIssue("Please Check TextFSM Template, Data is not being parsed.")
         return output
@@ -177,11 +183,11 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         Gathers the VRF names from the device
         """
-        vrf_names = ["global"]
+        vrf_names = ['global']
         output = self.show_vrf()
         if isinstance(output, list):
             for vrf in output:
-                if vrf['name'] not in vrf_names:
+                if vrf['name'] not in vrf:
                     vrf_names.append(vrf['name'])
         return vrf_names
 
