@@ -178,6 +178,9 @@ class CiscoNetworkDevice(NetworkDevice):
             raise TextFsmParseIssue("Please Check TextFSM Template, Data is not being parsed.")
         return output
 
+    def gather_config(self):
+        return self.send_command('show running-config', delay_factor=5)
+
     # Gather specific Data and parse it as needed
     def get_vrf_names(self):
         """

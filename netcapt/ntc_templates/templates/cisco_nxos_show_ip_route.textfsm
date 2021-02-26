@@ -15,6 +15,8 @@ Value TUNNELID (0x[a-f\d]+)
 Value ENCAP (\w+)
 
 Start
+  # Clear all variables to ensure a clean slate
+  ^IP\s+Route\s+Table\s+for\s+VRF\s+ -> Continue.Clearall
   ^IP\s+Route\s+Table\s+for\s+VRF\s+"${VRF}"\s*$$
   # Match the Network/Prefix Line
   ^\s*${NETWORK}\/${MASK}, ubest/mbest:

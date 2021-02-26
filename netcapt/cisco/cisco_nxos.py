@@ -37,10 +37,7 @@ class CiscoNxosDevice(CiscoNetworkDevice, UnsupportSwitch):
         return arp_list
 
     def gather_route(self):
-        vrf_names = self.get_vrf_names()
-        route_list = list()
-        for vrf in vrf_names:
-            route_list += self.send_command('show ip route vrf %s' % vrf)
+        return self.send_command('show ip route vrf all', use_textfsm=True)
 
     def get_vrf_info(self):
         return self.show_vrf_interface()
@@ -48,3 +45,15 @@ class CiscoNxosDevice(CiscoNetworkDevice, UnsupportSwitch):
     def show_vrf_interface(self, use_textfsm=True):
         return self.send_command('show vrf interface', use_textfsm=use_textfsm)
 
+    # Gather specific Data and parse it as needed
+    def get_vrf_names(self):
+        """
+        Gathers the VRF names from the device
+        """
+        vrf_names = list()
+        output = self.show_vrf()
+        if isinstance(output, list):
+            for vrf in output:
+                if vrf['name'] not in vrf:
+                    vrf_names.append(vrf['name'])
+        return vrf_names
