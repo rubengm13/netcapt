@@ -129,6 +129,8 @@ class CiscoNetworkDevice(NetworkDevice):
         route_list = list()
         route_table_present = False
         for vrf in vrf_list:
+            # Defaulting this as the value.
+            # TODO: Add a show route option if this comes back empty
             command = "show ip route"
             # Add VRF for non Global
             if vrf != "global":

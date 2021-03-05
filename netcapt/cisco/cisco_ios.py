@@ -1,10 +1,7 @@
 from .cisco import CiscoNetworkDevice
 from .. import functions as hf
 from ..supported_attr import UnsupportSwitch
-
-
-class TextFsmParseIssue(Exception):
-    pass
+from ..netcapt_exceptions import GatherAttributeUnsupported
 
 
 class CiscoIosDevice(CiscoNetworkDevice, UnsupportSwitch):
@@ -34,3 +31,9 @@ class CiscoIosDevice(CiscoNetworkDevice, UnsupportSwitch):
         vrf_names += super(CiscoIosDevice, self).get_vrf_names()
         return vrf_names
 
+    def gather_ip_mroute(self):
+        output = super(CiscoIosDevice, self).gather_ip_mroute()
+        if "% Invalid input detected at '^' marker." in output:
+            raise GatherAttributeUnsupported(
+                "{} object does not support attribute '{}'".format(str(self), 'gather_ip_mroute')
+            )

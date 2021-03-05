@@ -1,6 +1,6 @@
 
 
-class GatherAttributeError(Exception):
+class GatherAttributeUnsupported(Exception):
     pass
 
 

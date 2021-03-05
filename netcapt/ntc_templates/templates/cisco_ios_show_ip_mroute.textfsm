@@ -26,4 +26,6 @@ Start
   # Capture time-stamp if vty line has command time-stamping turned on
   ^Load\s+for\s+
   ^Time\s+source\s+is
+  ^\s+\^
+  ^%\s+Invalid input detected at
   ^. -> Error
