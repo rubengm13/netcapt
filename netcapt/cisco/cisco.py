@@ -129,10 +129,10 @@ class CiscoNetworkDevice(NetworkDevice):
         route_list = list()
         route_table_present = False
         for vrf in vrf_list:
-            vrf_string = ""
+            command = "show ip route"
+            # Add VRF for non Global
             if vrf != "global":
-                vrf_string = " vrf " + vrf
-            command = "show route" + vrf_string
+                command += " vrf " + vrf
             output = self.send_command(command, use_textfsm=True)
             if isinstance(output, list):
                 for route in output:
