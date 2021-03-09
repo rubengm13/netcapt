@@ -1,7 +1,6 @@
 from ..network_device import NetworkDevice
 from ciscoconfparse import CiscoConfParse
-from unipath import Path
-from .. import functions as hf
+from .. import utils
 import re
 from ..netcapt_exceptions import TextFsmParseIssue
 
@@ -79,25 +78,25 @@ class CiscoNetworkDevice(NetworkDevice):
                 if isinstance(vrf_info, list):
                     for vrf in vrf_info:
                         for intf_vrf in vrf['interface']:
-                            if intf_vrf.lower() in hf.intf_abbvs(intf['interface']):
+                            if intf_vrf.lower() in utils.intf_abbvs(intf['interface']):
                                 intf = vrf['name']
                 # only proceed if Parsed by Textfsm, if a list was provided.
                 # parses through
                 if isinstance(intf_status_list, list):
-                    intf_status = hf.find_intf_data(intf['interface'], intf_status_list, 'port')
+                    intf_status = utils.find_intf_data(intf['interface'], intf_status_list, 'port')
                     # Only if a value was found
                     if intf_status:
                         if intf_status['vlan'].isnumeric():
                             intf['vlan'] = intf_status['vlan']
                         elif intf_status['vlan'] == 'trunk':
                             intf['trunk_access'] = 'Trunk'
-                            intf['native'] = hf.find_intf_data(
+                            intf['native'] = utils.find_intf_data(
                                 intf_status['port'], trunk_detail['vlans_native'], 'interface', 'vlans'
                             )
-                            intf['allowed'] = hf.find_intf_data(
+                            intf['allowed'] = utils.find_intf_data(
                                 intf_status['port'], trunk_detail['vlans_allowed'], 'interface', 'vlans'
                             )
-                            intf['not_pruned'] = hf.find_intf_data(
+                            intf['not_pruned'] = utils.find_intf_data(
                                 intf_status['port'], trunk_detail['vlans_not_pruned'], 'interface', 'vlans'
                             )
             return intf_list

@@ -1,5 +1,5 @@
 from .cisco import CiscoNetworkDevice
-from .. import functions as hf
+from .. import utils
 import re
 from ..netcapt_exceptions import GatherAttributeUnsupported
 from ..supported_attr import UnsupportWirelessControllerAttr

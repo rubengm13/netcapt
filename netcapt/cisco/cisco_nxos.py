@@ -1,5 +1,4 @@
 from .cisco import CiscoNetworkDevice
-from .. import functions as hf
 from ..supported_attr import UnsupportSwitch
 
 
