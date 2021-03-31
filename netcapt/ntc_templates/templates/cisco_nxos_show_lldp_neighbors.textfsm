@@ -1,0 +1,13 @@
+Value NEIGHBOR (\S+)
+Value LOCAL_INTERFACE (Eth\S+)
+Value NEIGHBOR_INTERFACE (\S+)
+
+Start
+  ^Device.*ID -> LLDP
+
+LLDP
+  ^${NEIGHBOR}$$
+  ^\s+${LOCAL_INTERFACE}\s+\d+\s+(\w+?\s)+\s+${NEIGHBOR_INTERFACE} -> Record
+  ^${NEIGHBOR}\s+${LOCAL_INTERFACE}\s+\d+\s+(\w+?\s)+\s+${NEIGHBOR_INTERFACE} -> Record
+  # Last Resort just in case
+  ^${NEIGHBOR}\s*${LOCAL_INTERFACE}\s+\d*\s+(\w+?\s)+\s+${NEIGHBOR_INTERFACE} -> Record

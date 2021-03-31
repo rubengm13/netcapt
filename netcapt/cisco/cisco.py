@@ -1,18 +1,22 @@
 from ..network_device import NetworkDevice
 from ciscoconfparse import CiscoConfParse
-from unipath import Path
-from .. import functions as hf
-
+from .. import utils
+import re
+from ..netcapt_exceptions import TextFsmParseIssue
 
 class TextFsmParseIssue(Exception):
     pass
 
 
 class CiscoNetworkDevice(NetworkDevice):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.vrf_names = None
-        self.hostname = ''
+
+    # mapper for trunk dict method
+    _trunk_dict = {
+        'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
+        'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
+        'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
+        'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
+    }
 
     # Gather Commands
     # TODO: add a gather all, that will gather all the Gather commands
@@ -33,10 +37,11 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # Ready
     def gather_cdp(self):
-        output = self.show_cdp_neigh_detailed(use_textfsm=True)
+        output = self.show_cdp_neigh_detail(use_textfsm=True)
+
         output2 = self.show_cdp_neigh(use_textfsm=True)
         if len(output) != len(output2):
-            raise TextFsmParseIssue("ERROR:\n"
+            raise TextFsmParseIssue(str(self) + " ERROR:\n"
                                     "\tThe detailed CDP count does not equal the regular CDP count, please check the TextFSM file")
         return output
 
@@ -49,7 +54,7 @@ class CiscoNetworkDevice(NetworkDevice):
         # Applies to all of them, will not go through interface_status section because no output
         intf_list = self.show_interface()
         intf_status_list = self.show_interface_status()
-        vrf_info = self.show_vrf()
+        vrf_info = self.get_vrf_info()
 
         # Gather additional trunk data
         trunk_detail = self.get_trunk_dict()
@@ -73,26 +78,27 @@ class CiscoNetworkDevice(NetworkDevice):
                 if isinstance(vrf_info, list):
                     for vrf in vrf_info:
                         for intf_vrf in vrf['interface']:
-                            if intf_vrf.lower() in hf.intf_abbvs(intf['interface']):
+                            if intf_vrf.lower() in utils.intf_abbvs(intf['interface']):
                                 intf = vrf['name']
                 # only proceed if Parsed by Textfsm, if a list was provided.
                 # parses through
                 if isinstance(intf_status_list, list):
-                    intf_status = hf.find_intf_data(intf['interface'], intf_status_list, 'port')
+                    intf_status = utils.find_intf_data(intf['interface'], intf_status_list, 'port')
                     # Only if a value was found
-                    if intf_status and intf_status['vlan'] == 'trunk':
+                    if intf_status:
                         if intf_status['vlan'].isnumeric():
                             intf['vlan'] = intf_status['vlan']
-                        intf['trunk_access'] = 'Trunk'
-                        intf['native'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_native'], 'vlans', ''
-                        )
-                        intf['allowed'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_allowed'], 'vlans', ''
-                        )
-                        intf['not_pruned'] = hf.find_intf_data(
-                            intf_status['port'], trunk_detail['vlans_not_pruned'], 'vlans', ''
-                        )
+                        elif intf_status['vlan'] == 'trunk':
+                            intf['trunk_access'] = 'Trunk'
+                            intf['native'] = utils.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_native'], 'interface', 'vlans'
+                            )
+                            intf['allowed'] = utils.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_allowed'], 'interface', 'vlans'
+                            )
+                            intf['not_pruned'] = utils.find_intf_data(
+                                intf_status['port'], trunk_detail['vlans_not_pruned'], 'interface', 'vlans'
+                            )
             return intf_list
 
         elif isinstance(intf_list, str):
@@ -108,7 +114,7 @@ class CiscoNetworkDevice(NetworkDevice):
         output = self.show_lldp_neigh_detailed(use_textfsm=True)
         output2 = self.show_lldp_neigh(use_textfsm=True)
         if len(output) != len(output2):
-            print("ERROR:\n"
+            raise TextFsmParseIssue(str(self) + " ERROR:\n"
                   "\tThe detailed LLDP count does not equal the regular LLDP count, please check the TextFSM file")
         return output
 
@@ -116,25 +122,76 @@ class CiscoNetworkDevice(NetworkDevice):
         # TODO: Need to continue work on this for NXOS and XR
         return self.show_mac_address_table()
 
+    # TODO: Need to Fix this this
     def gather_route(self):
-        pass
-        # TODO: complete the gather_route for all devices
+        vrf_list = self.get_vrf_names()
+        route_list = list()
+        route_table_present = False
+        for vrf in vrf_list:
+            # Defaulting this as the value.
+            # TODO: Add a show route option if this comes back empty
+            command = "show ip route"
+            # Add VRF for non Global
+            if vrf != "global":
+                command += " vrf " + vrf
+            output = self.send_command(command, use_textfsm=True)
+            if isinstance(output, list):
+                for route in output:
+                    route["cidr"] = route['network'] + "/" + route['mask']
+                    if "vrf" not in list(route.keys()):
+                        route["vrf"] = vrf
+                    route_list.append(route)
+                    route_table_present = True
+            if not route_table_present:
+                route = {}
+                default_gateway = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", output)
+                route["vrf"] = vrf
+                route["protocol"] = "Layer 2 only"
+                if default_gateway:
+                    route["nexthop_ip"] = default_gateway[0]
+                else:
+                    output2 = self.send_command("show run | incl default-gateway")
+                    default_gateway = re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", output2)
+                    if default_gateway:
+                        route["nexthop_ip"] = default_gateway[0]
+                route_list.append(route)
+        return route_list
 
     # Ready
     def gather_version(self):
         output = self.show_version(use_textfsm=True)
+        # Adding CPU Processes tp gather_version
+        cpu_data = self.send_command('show processes cpu', use_textfsm=True)
+        if isinstance(cpu_data, list):
+            output[0].update(cpu_data[0])
         return output
+
+    def gather_ip_mroute(self):
+        output = self.show_ip_mroute()
+        # Need to determine if the table was empty
+        re_match = re.match(r'^IP Multicast Routing Table for VRF\s+\S+\n+$', output)
+        if 'IP Multicast Forwarding is not enabled.' in output:
+            output = [{"no_data": "IP Multicast Forwarding is not enabled."}]
+        elif re_match:
+            # if re_match then the rable was empty and not a TextFSM Issue.
+            output = [{"no_data": "No show ip mroute data"}]
+        elif isinstance(output, str):
+            raise TextFsmParseIssue("Please Check TextFSM Template, Data is not being parsed.")
+        return output
+
+    def gather_config(self):
+        return self.send_command('show running-config', delay_factor=5)
 
     # Gather specific Data and parse it as needed
     def get_vrf_names(self):
         """
         Gathers the VRF names from the device
         """
-        vrf_names = ["global"]
+        vrf_names = ['global']
         output = self.show_vrf()
         if isinstance(output, list):
             for vrf in output:
-                if vrf['name'] not in vrf_names:
+                if vrf['name'] not in vrf:
                     vrf_names.append(vrf['name'])
         return vrf_names
 
@@ -169,7 +226,7 @@ class CiscoNetworkDevice(NetworkDevice):
 
     # Show commands with use_textfsm
     def show_inventory(self, use_textfsm=True):
-        return self.send_command("show version", use_textfsm=use_textfsm)
+        return self.send_command("show inventory", use_textfsm=use_textfsm)
 
     def show_ip_bgp(self, use_textfsm=True):
         return self.send_command("show ip bgp", use_textfsm=use_textfsm)
@@ -194,7 +251,7 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         return self.send_command("show vrf", use_textfsm=use_textfsm)
 
-    def show_cdp_neigh_detailed(self, use_textfsm=True):
+    def show_cdp_neigh_detail(self, use_textfsm=True):
         """
         Captures the Detailed CDP output
 
@@ -247,8 +304,8 @@ class CiscoNetworkDevice(NetworkDevice):
     def show_arp(self, use_textfsm=True):
         return self.send_command("show ip arp", use_textfsm=use_textfsm)
 
-    def show_ip_mroute_summary(self, use_textfsm=True):
-        return self.send_command("show ip mroute summary", use_textfsm=use_textfsm)
+    def show_ip_mroute(self, use_textfsm=True):
+        return self.send_command("show ip mroute", use_textfsm=use_textfsm)
 
     # show configuration commands with Cisco Config Parser option
     def show_startup_configuration(self, cisco_cfg_parse=False, factory=False):
@@ -280,7 +337,7 @@ class CiscoNetworkDevice(NetworkDevice):
         """
         Parses the 'show int trunk' response, only works on cisco_ios
         """
-
+        return_dict = self._trunk_dict.copy()
         def __parse_dictionary_data(list_of_dict):
             if isinstance(list_of_dict, str):
                 return None
@@ -298,12 +355,6 @@ class CiscoNetworkDevice(NetworkDevice):
             vlans_list = __parse_dictionary_data(vlans_list)
             return vlans_list
 
-        return_dict = {
-            'vlans_native': 'cisco_ios_get_intf_native_vlan.textfsm',
-            'vlans_allowed': 'cisco_ios_get_intf_allowed_vlan.textfsm',
-            'vlans_forwarding': 'cisco_ios_get_intf_trunk_vlan.textfsm',
-            'vlans_not_pruned': 'cisco_ios_get_intf_not_pruned_vlan.textfsm',
-        }
         for key, val in return_dict.items():
             return_dict[key] = self._textfsm_templates_path.child(val)
 
@@ -323,3 +374,23 @@ class CiscoNetworkDevice(NetworkDevice):
             if 'sfp' in item["description"].lower():
                 sfp_list.append(item)
         return sfp_list
+
+    def count_intf(self):
+        intf_counts = dict()
+        interface_list = self.show_interface()
+        for intf in interface_list:
+            # Strip the Interface Number
+            intf_stripped = re.match(r'^([a-zA-Z]+)', intf['interface']).group(1)
+
+            # Add Interface Type if it does not already exist
+            if intf_stripped not in intf_counts.keys():
+                intf_counts[intf_stripped] = {'count': 0, 'active': 0}
+
+            # Add the Counts
+            intf_counts[intf_stripped]['count'] += 1
+            if intf['link_status'] == 'up':
+                intf_counts[intf_stripped]['active'] += 1
+        return intf_counts
+
+    def get_vrf_info(self):
+        return self.show_vrf()

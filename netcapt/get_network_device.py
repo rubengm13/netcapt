@@ -1,15 +1,18 @@
-from .cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice
+from .cisco import CiscoIosDevice, CiscoXrDevice, CiscoNxosDevice, CiscoWlcDevice
 import netmiko
 
 
 DEVICE_MAPPER = {
     "cisco_ios": CiscoIosDevice,
     "cisco_xr": CiscoXrDevice,
-    "cisco_nxos": CiscoNxosDevice
+    "cisco_nxos": CiscoNxosDevice,
+    "cisco_wlc": CiscoWlcDevice
+
 }
 
-SUPPORTED_DEVICES_str = list(DEVICE_MAPPER.keys())
-SUPPORTED_DEVICES_str = "\n".join(SUPPORTED_DEVICES_str)
+
+class UnableToDetectDeviceType(Exception):
+    pass
 
 
 # TODO: Need to discuss how we are going to run this, do we have it return an empty if Value does not
@@ -22,8 +25,10 @@ def GetNetworkDevice(**kwargs):
     :return: Network Device Class or None
     """
     # Auto Detect device type with netmiko or extract the device type from the device_type option
-    if kwargs['device_type'] == 'autodetect':
+
+    if 'autodetect' in kwargs['device_type']:
         netmiko_args = kwargs.copy()
+        # Need to enable Auto Connect otherwise it fails.
         netmiko_args['auto_connect'] = True
         net_dev_type = guess_device_type(**netmiko_args)
         if net_dev_type:
@@ -33,13 +38,18 @@ def GetNetworkDevice(**kwargs):
         # TODO: Need to consider what to do if we get back a None, currently it shouldn't be a problem. Needs to be
         #  resolved by the time we start the Network Crawl option.
     else:
-        net_dev_type = kwargs['device_type'].split('_')
-        net_dev_type = '_'.join(net_dev_type[:2])
+        net_dev_type = kwargs['device_type']
+        # Strip ssh or telnet tag
+        if net_dev_type[-4:] == '_ssh':
+            net_dev_type = net_dev_type[:-4]
+        elif net_dev_type[-7:] == '_telnet':
+            net_dev_type = net_dev_type[:-7]
 
-    if net_dev_type not in DEVICE_MAPPER:
+    if net_dev_type not in DEVICE_MAPPER.keys():
         raise ValueError('Unsupported Device Type, the following devices are currently supported:\n'
-                         + SUPPORTED_DEVICES_str)
+                         + '\n'.join(DEVICE_MAPPER.keys()))
     network_device = DEVICE_MAPPER[net_dev_type]
+
     return network_device(**kwargs)
 
 

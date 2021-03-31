@@ -1,12 +1,9 @@
 from .cisco import CiscoNetworkDevice
-from .. import functions as hf
+from ..supported_attr import UnsupportSwitch
+from ..netcapt_exceptions import GatherAttributeUnsupported
 
 
-class TextFsmParseIssue(Exception):
-    pass
-
-
-class CiscoIosDevice(CiscoNetworkDevice):
+class CiscoIosDevice(CiscoNetworkDevice, UnsupportSwitch):
     def gather_arp(self):
         """
         Captures arp information and utilizing the vrf data it parses the
@@ -28,16 +25,14 @@ class CiscoIosDevice(CiscoNetworkDevice):
                 arp_list.append(arp)
         return arp_list
 
-    # Need to update this, as it does not always capture all the IPs
-    # This template will work better
-    def show_cdp_neigh_detailed(self, use_textfsm=True):
-        """
-        Captures the Detailed CDP output
+    def get_vrf_names(self):
+        vrf_names = ['global']
+        vrf_names += super(CiscoIosDevice, self).get_vrf_names()
+        return vrf_names
 
-        :param use_textfsm: Boolean to determine if TextFSM should be used to parse the output default: True
-
-        :return: List of Detailed CDP Neighbors
-
-        """
-        textfsm_tmpl = self._textfsm_templates_path.child("cisco_ios_show_cdp_neighbors_detail.textfsm")
-        return self.send_command("show cdp neighbor detail", use_textfsm=use_textfsm, textfsm_template=textfsm_tmpl)
+    def gather_ip_mroute(self):
+        output = super(CiscoIosDevice, self).gather_ip_mroute()
+        if "% Invalid input detected at '^' marker." in output:
+            raise GatherAttributeUnsupported(
+                "{} object does not support attribute '{}'".format(str(self), 'gather_ip_mroute')
+            )

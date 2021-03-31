@@ -1,0 +1,13 @@
+Value Required INTERFACE (\S+)
+Value Required VLANS (\S+)
+
+Start
+  ^\s*Port\s+Native\s+Status\s+Port\s*$$ -> INTERFACE_CAPTURE
+
+
+INTERFACE_CAPTURE
+  ^\s+vlan\s+Channel
+  ^${INTERFACE}\s+${VLANS}+\s+\S+\s+\S+\s*$$ -> Record
+  ^----------
+  ^\s*$$ -> End
+
